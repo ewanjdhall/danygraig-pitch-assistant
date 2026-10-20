@@ -1,5 +1,5 @@
 {
-  "_note": "Conversations replayed through app.turn() by tests/run_tests.py. 'edits' are chip changes the guest makes.",
+  "_note": "Conversations replayed through app.turn() by tests/run_tests.py, for v1 (original) and v2 (after the Phase 4 changes). 'edits' are chip changes the guest makes. 'turns_v2' replaces 'turns' for v2 when v2 asks a question first.",
   "cases": [
     {
       "id": "test_A",
@@ -14,6 +14,28 @@
       "turns": [
         {"message": "hi, two of us plus Bella in the campervan, need power, mid August"},
         {"edits": {"dogs": "1 dog", "adults": "2"}, "why": "the guest spots '3 adults' and 'pets: none' and corrects them"}
+      ],
+      "turns_v2": [
+        {"message": "hi, two of us plus Bella in the campervan, need power, mid August"},
+        {"message": "14-16 Aug, Bella's our dog", "why": "the guest answers the two questions"}
+      ]
+    },
+    {
+      "id": "storyboard_failure",
+      "title": "Extra check - the Week 2 failure storyboard message (dates and length given, Bella still ambiguous)",
+      "turns": [
+        {"message": "hi, two of us plus Bella, 6m campervan, 14-16 Aug, need power"}
+      ],
+      "turns_v2": [
+        {"message": "hi, two of us plus Bella, 6m campervan, 14-16 Aug, need power"},
+        {"message": "Bella is a pet", "why": "the guest taps the quick reply"}
+      ]
+    },
+    {
+      "id": "named_dog",
+      "title": "Extra check - the dog is named clearly, so v2 should not ask about her",
+      "turns": [
+        {"message": "me and my partner and our dog Bella, 7m motorhome, 3-5 Sept, need hook-up"}
       ]
     },
     {

@@ -1,7 +1,8 @@
 """Replay the test conversations through app.turn() and write what happened.
 
 Run from the project folder:  python tests/run_tests.py
-Results go to tests/results/ (one Markdown file per case, plus SUMMARY.md).
+Each case runs on v1 (the original path) and v2 (after the Phase 4 changes).
+Results go to tests/results/ (one Markdown file per case and version, plus SUMMARY.md).
 """
 
 import json
@@ -17,7 +18,9 @@ RESULTS = os.path.join(ROOT, "tests", "results")
 
 
 def chips_text(chips):
-    return " ".join(f"`{chip['label']}`" for chip in chips) or "(none)"
+    marks = {"assumed": " (assumed)", "edited": " (changed)", "vague": " (vague)",
+             "missing": " (missing)", "unclear": " (unclear)"}
+    return " ".join(f"`{chip['label']}{marks.get(chip.get('source'), '')}`" for chip in chips) or "(none)"
 
 
 def card_text(card):
@@ -28,6 +31,8 @@ def describe(step, data, number):
     lines = []
     if "message" in step:
         lines += [f"### Turn {number}: the guest types", "", f"> {step['message']}", ""]
+        if step.get("why"):
+            lines += [f"*Why: {step['why']}.*", ""]
     else:
         changes = ", ".join(f"{field} → {value}" for field, value in step["edits"].items())
         lines += [f"### Turn {number}: the guest edits chips ({changes})", ""]
@@ -75,14 +80,15 @@ def describe(step, data, number):
     return lines
 
 
-def run_case(case):
+def run_case(case, version):
     original = app.DATA_DIR
     if case.get("data_dir"):
         app.DATA_DIR = os.path.join(ROOT, case["data_dir"])
+    steps = case.get("turns_v2", case["turns"]) if version == "v2" else case["turns"]
     state, turns = None, []
     try:
-        for step in case["turns"]:
-            data = app.turn(step.get("message", ""), state, step.get("edits"))
+        for step in steps:
+            data = app.turn(step.get("message", ""), state, step.get("edits"), version=version)
             state = data.get("state", state)
             turns.append((step, data))
     finally:
@@ -103,18 +109,23 @@ def main():
     os.makedirs(RESULTS, exist_ok=True)
     with open(os.path.join(ROOT, "tests", "cases.json"), encoding="utf-8") as f:
         cases = json.load(f)["cases"]
-    summary = ["# Test results (v1, original path)", "",
-               "| Case | Turns | Outcome after the last turn |", "|---|---|---|"]
+    summary = ["# Test results", "",
+               "v1 = the path as first built and tested. v2 = after the Phase 4 changes "
+               "(validation step, clarification questions, value + source + evidence per field).", "",
+               "| Case | Version | Turns | First turn | After the last turn |", "|---|---|---|---|---|"]
     for case in cases:
-        turns = run_case(case)
-        lines = [f"# {case['title']} (v1)", ""]
-        for number, (step, data) in enumerate(turns, 1):
-            lines += describe(step, data, number)
-        path = os.path.join(RESULTS, f"{case['id']}_v1.md")
-        with open(path, "w", encoding="utf-8") as f:
-            f.write("\n".join(lines))
-        summary.append(f"| {case['title']} | {len(turns)} | {outcome(turns)} |")
-        print(f"{case['id']:<18} v1  {outcome(turns)}")
+        for version in ("v1", "v2"):
+            turns = run_case(case, version)
+            lines = [f"# {case['title']} ({version})", ""]
+            for number, (step, data) in enumerate(turns, 1):
+                lines += describe(step, data, number)
+            path = os.path.join(RESULTS, f"{case['id']}_{version}.md")
+            with open(path, "w", encoding="utf-8") as f:
+                f.write("\n".join(lines))
+            first = outcome(turns[:1])
+            last = outcome(turns) if len(turns) > 1 else "(same)"
+            summary.append(f"| {case['title']} | {version} | {len(turns)} | {first} | {last} |")
+            print(f"{case['id']:<20} {version}  {first}  ->  {last}")
     with open(os.path.join(RESULTS, "SUMMARY.md"), "w", encoding="utf-8") as f:
         f.write("\n".join(summary) + "\n")
 
