@@ -1,0 +1,40 @@
+{
+  "_note": "Made-up bookings for the 2027 season. Each booking covers the nights from check_in up to (not including) check_out.",
+  "bookings": [
+    {
+      "pitch": 2,
+      "check_in": "2027-08-10",
+      "check_out": "2027-08-17"
+    },
+    {
+      "pitch": 6,
+      "check_in": "2027-08-12",
+      "check_out": "2027-08-18"
+    },
+    {
+      "pitch": 7,
+      "check_in": "2027-08-16",
+      "check_out": "2027-08-18"
+    },
+    {
+      "pitch": 8,
+      "check_in": "2027-08-15",
+      "check_out": "2027-08-19"
+    },
+    {
+      "pitch": 9,
+      "check_in": "2027-08-14",
+      "check_out": "2027-08-17"
+    },
+    {
+      "pitch": 12,
+      "check_in": "2027-08-21",
+      "check_out": "2027-08-23"
+    },
+    {
+      "pitch": 14,
+      "check_in": "2027-08-01",
+      "check_out": "2027-08-08"
+    }
+  ]
+}

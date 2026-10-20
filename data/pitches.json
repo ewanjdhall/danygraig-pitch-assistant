@@ -1,0 +1,156 @@
+{
+  "_note": "Made-up data for a student prototype. Not the real Danygraig Holiday Park pitch list, prices or bookings.",
+  "park": "Danygraig Holiday Park",
+  "season": {
+    "start": "2027-03-01",
+    "end": "2027-10-31"
+  },
+  "areas": {
+    "Orchard": "quiet grass field, no dogs",
+    "Riverside": "hardstanding pitches by the river, no dogs",
+    "Dog-friendly field": "grass and hardstanding pitches, dogs welcome"
+  },
+  "pitches": [
+    {
+      "id": 1,
+      "area": "Orchard",
+      "surface": "grass",
+      "max_length_m": 6.0,
+      "hookup": false,
+      "dogs": false,
+      "max_guests": 6,
+      "price": 20
+    },
+    {
+      "id": 2,
+      "area": "Orchard",
+      "surface": "grass",
+      "max_length_m": 7.0,
+      "hookup": true,
+      "dogs": false,
+      "max_guests": 6,
+      "price": 24
+    },
+    {
+      "id": 3,
+      "area": "Orchard",
+      "surface": "grass",
+      "max_length_m": 8.0,
+      "hookup": true,
+      "dogs": false,
+      "max_guests": 6,
+      "price": 25
+    },
+    {
+      "id": 4,
+      "area": "Orchard",
+      "surface": "grass",
+      "max_length_m": 0.0,
+      "hookup": false,
+      "dogs": false,
+      "max_guests": 4,
+      "price": 16,
+      "tents_only": true
+    },
+    {
+      "id": 5,
+      "area": "Orchard",
+      "surface": "grass",
+      "max_length_m": 9.0,
+      "hookup": true,
+      "dogs": false,
+      "max_guests": 6,
+      "price": 26
+    },
+    {
+      "id": 6,
+      "area": "Riverside",
+      "surface": "hardstanding",
+      "max_length_m": 6.5,
+      "hookup": true,
+      "dogs": false,
+      "max_guests": 4,
+      "price": 28
+    },
+    {
+      "id": 7,
+      "area": "Riverside",
+      "surface": "hardstanding",
+      "max_length_m": 8.0,
+      "hookup": true,
+      "dogs": false,
+      "max_guests": 4,
+      "price": 29
+    },
+    {
+      "id": 8,
+      "area": "Riverside",
+      "surface": "hardstanding",
+      "max_length_m": 10.0,
+      "hookup": true,
+      "dogs": false,
+      "max_guests": 6,
+      "price": 32
+    },
+    {
+      "id": 9,
+      "area": "Riverside",
+      "surface": "hardstanding",
+      "max_length_m": 7.5,
+      "hookup": true,
+      "dogs": false,
+      "max_guests": 4,
+      "price": 29
+    },
+    {
+      "id": 10,
+      "area": "Dog-friendly field",
+      "surface": "hardstanding",
+      "max_length_m": 5.5,
+      "hookup": true,
+      "dogs": true,
+      "max_guests": 4,
+      "price": 26
+    },
+    {
+      "id": 11,
+      "area": "Dog-friendly field",
+      "surface": "grass",
+      "max_length_m": 7.0,
+      "hookup": true,
+      "dogs": true,
+      "max_guests": 6,
+      "price": 24
+    },
+    {
+      "id": 12,
+      "area": "Dog-friendly field",
+      "surface": "hardstanding",
+      "max_length_m": 8.0,
+      "hookup": true,
+      "dogs": true,
+      "max_guests": 6,
+      "price": 27
+    },
+    {
+      "id": 13,
+      "area": "Dog-friendly field",
+      "surface": "grass",
+      "max_length_m": 6.0,
+      "hookup": false,
+      "dogs": true,
+      "max_guests": 6,
+      "price": 19
+    },
+    {
+      "id": 14,
+      "area": "Dog-friendly field",
+      "surface": "hardstanding",
+      "max_length_m": 10.0,
+      "hookup": true,
+      "dogs": true,
+      "max_guests": 6,
+      "price": 31
+    }
+  ]
+}
