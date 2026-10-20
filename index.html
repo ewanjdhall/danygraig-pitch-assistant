@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Danygraig booking assistant (prototype)</title>
+<style>
+  :root {
+    --bg: #eef1ec; --card: #ffffff; --ink: #1d2a22; --muted: #5d6b62; --line: #d5ddd6;
+    --brand: #2f5d43; --brand-ink: #ffffff; --guest: #dcebff; --guest-line: #9fc3f2;
+    --chip: #e9f1fb; --chip-line: #7aa6dd; --chip-ink: #1d4f8f;
+    --ok: #2e7d4f; --focus: #f2b134;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 16px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .app { max-width: 720px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column;
+         background: var(--card); box-shadow: 0 0 0 1px var(--line); }
+  header { background: var(--brand); color: var(--brand-ink); padding: 14px 18px; }
+  header h1 { margin: 0; font-size: 1.1rem; font-weight: 650; }
+  header p { margin: 2px 0 0; font-size: .85rem; opacity: .9; }
+  .badge { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px;
+           background: rgba(255,255,255,.18); font-size: .75rem; vertical-align: middle; }
+  #log { flex: 1; padding: 18px; display: flex; flex-direction: column; gap: 14px; overflow-y: auto; }
+  .msg { max-width: 88%; padding: 10px 14px; border-radius: 14px; }
+  .bot { align-self: flex-start; background: #f3f5f3; border: 1px solid var(--line); }
+  .user { align-self: flex-end; background: var(--guest); border: 1px solid var(--guest-line); }
+  .note { font-size: .78rem; color: var(--muted); margin-top: 6px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .chip { border: 1.5px solid var(--chip-line); background: var(--chip); color: var(--chip-ink);
+          border-radius: 999px; padding: 3px 11px; font: inherit; font-size: .9rem; cursor: pointer; }
+  .chip:hover { filter: brightness(.97); }
+  .chip:focus-visible, button:focus-visible, input:focus-visible { outline: 3px solid var(--focus); outline-offset: 1px; }
+  .chip-edit { border: 1.5px solid var(--chip-line); border-radius: 999px; padding: 3px 11px;
+               font: inherit; font-size: .9rem; width: 12em; }
+  .pitch { margin-top: 10px; border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; background: #fff; }
+  .pitch h3 { margin: 0 0 4px; font-size: 1rem; }
+  .pitch ul { margin: 4px 0 8px; padding-left: 0; list-style: none; }
+  .pitch li::before { content: "✓ "; color: var(--ok); font-weight: 700; }
+  .price { font-size: .9rem; color: var(--muted); margin-bottom: 8px; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; }
+  button.primary { background: var(--brand); color: #fff; border: 0; border-radius: 8px; padding: 7px 16px; font: inherit; cursor: pointer; }
+  button.secondary { background: #fff; color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 7px 14px; font: inherit; cursor: pointer; }
+  button.link { background: none; border: 0; color: var(--brand); padding: 4px 0; font: inherit; cursor: pointer; text-decoration: underline; }
+  .others { margin-top: 6px; }
+  .near { font-size: .9rem; margin: 6px 0 0; padding-left: 18px; }
+  details.trace { margin-top: 8px; font-size: .78rem; color: var(--muted); }
+  details.trace pre { white-space: pre-wrap; word-break: break-word; background: #f7f8f7; border: 1px solid var(--line);
+                      border-radius: 8px; padding: 8px; max-height: 260px; overflow: auto; }
+  form { display: flex; gap: 8px; padding: 12px 18px 18px; border-top: 1px solid var(--line); }
+  form input { flex: 1; min-width: 0; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; font: inherit; }
+  .typing { color: var(--muted); font-style: italic; font-size: .9rem; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>Danygraig booking assistant <span class="badge" id="version">prototype</span></h1>
+    <p>Made-up pitch data for a student prototype · nothing is really booked</p>
+  </header>
+  <main id="log" aria-live="polite">
+    <div class="msg bot">Hi! Who's coming, when, and what are you bringing?
+      <div class="note">I can suggest a touring or tent pitch for the 2027 season. I can't take payments,
+        and in this prototype I can't make a real booking.</div>
+    </div>
+  </main>
+  <form id="ask">
+    <label for="message" class="visually-hidden" hidden>Your message</label>
+    <input id="message" autocomplete="off" placeholder="e.g. 2 adults, 6m campervan, 14-16 Aug, need hook-up">
+    <button class="primary" type="submit">Send</button>
+  </form>
+</div>
+
+<script>
+let state = null;
+const log = document.getElementById('log');
+
+function el(tag, attrs = {}, ...children) {
+  const node = document.createElement(tag);
+  for (const [key, value] of Object.entries(attrs)) {
+    if (key === 'class') node.className = value;
+    else if (key.startsWith('on')) node.addEventListener(key.slice(2), value);
+    else node.setAttribute(key, value);
+  }
+  for (const child of children) {
+    if (child === null || child === undefined) continue;
+    node.append(child instanceof Node ? child : document.createTextNode(child));
+  }
+  return node;
+}
+
+function scrollDown() { log.scrollTop = log.scrollHeight; }
+
+async function send(message, edits = null, shown = message) {
+  if (shown) log.append(el('div', {class: 'msg user'}, shown));
+  const typing = el('div', {class: 'typing'}, "checking what's free…");
+  log.append(typing); scrollDown();
+  try {
+    const response = await fetch('/api/turn', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({message, state, edits})
+    });
+    const data = await response.json();
+    typing.remove();
+    if (data.state) state = data.state;
+    render(data);
+  } catch (error) {
+    typing.remove();
+    log.append(el('div', {class: 'msg bot'}, "I can't reach the assistant right now, so I won't guess. Is app.py still running?"));
+  }
+  scrollDown();
+}
+
+function chipButton(chip) {
+  const button = el('button', {class: 'chip', type: 'button', 'data-field': chip.field,
+                               'aria-label': chip.label + ' (tap to change)'}, chip.label);
+  button.addEventListener('click', () => {
+    const input = el('input', {class: 'chip-edit', placeholder: chip.hint || 'new value',
+                               'aria-label': 'Change ' + chip.label});
+    input.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        const value = input.value.trim();
+        input.replaceWith(button);
+        if (value) send('', {[chip.field]: value}, chip.label + ' → ' + value);
+      } else if (event.key === 'Escape') {
+        input.replaceWith(button);
+      }
+    });
+    button.replaceWith(input);
+    input.focus();
+  });
+  return button;
+}
+
+function pitchCard(card, bubble) {
+  return el('div', {class: 'pitch'},
+    el('h3', {}, card.title),
+    el('ul', {}, ...card.reasons.map(reason => el('li', {}, reason))),
+    el('div', {class: 'price'}, card.price),
+    el('div', {class: 'row'},
+      el('button', {class: 'primary', type: 'button', onclick: () => confirmBooking(card, bubble)}, 'Book'),
+      el('button', {class: 'secondary', type: 'button', onclick: () => {
+        const first = bubble.querySelector('.chip');
+        if (first) first.focus();
+      }}, 'Change')));
+}
+
+function confirmBooking(card, bubble) {
+  const panel = el('div', {class: 'pitch'},
+    el('h3', {}, 'Check your booking'),
+    el('ul', {}, ...card.summary.map(line => el('li', {}, line))),
+    el('div', {class: 'row'},
+      el('button', {class: 'secondary', type: 'button', onclick: () => panel.remove()}, 'Back'),
+      el('button', {class: 'primary', type: 'button', onclick: () => {
+        panel.remove();
+        log.append(el('div', {class: 'msg bot'},
+          `Prototype only: nothing has been booked and no payment was taken. In the real system this would ` +
+          `create a provisional booking for ${card.name} and email you a confirmation.`));
+        scrollDown();
+      }}, 'Confirm')));
+  bubble.append(panel);
+  scrollDown();
+}
+
+// Lab 4 integration point: everything the server returns is shown here.
+function render(data) {
+  if (data.version) document.getElementById('version').textContent = data.version;
+  const bubble = el('div', {class: 'msg bot'}, data.reply);
+  if (data.chips && data.chips.length) {
+    bubble.append(el('div', {class: 'chips'}, ...data.chips.map(chipButton)));
+  }
+  if (data.recommendation) bubble.append(pitchCard(data.recommendation, bubble));
+  if (data.alternatives && data.alternatives.length) {
+    const others = el('div', {class: 'others', hidden: ''},
+                      ...data.alternatives.map(card => pitchCard(card, bubble)));
+    const toggle = el('button', {class: 'link', type: 'button'},
+                      `${data.alternatives.length} other option${data.alternatives.length > 1 ? 's' : ''}`);
+    toggle.addEventListener('click', () => { others.hidden = !others.hidden; });
+    bubble.append(toggle, others);
+  }
+  if (data.near_misses && data.near_misses.length) {
+    bubble.append(el('div', {class: 'note'}, 'Closest:'),
+      el('ul', {class: 'near'}, ...data.near_misses.map(n => el('li', {}, `${n.pitch}: ${n.why_not}`))));
+  }
+  if (data.note) bubble.append(el('div', {class: 'note'}, data.note));
+  if (data.trace) {
+    bubble.append(el('details', {class: 'trace'}, el('summary', {}, 'What the system did'),
+                     el('pre', {}, JSON.stringify(data.trace, null, 2))));
+  }
+  log.append(bubble);
+}
+
+document.getElementById('ask').addEventListener('submit', (event) => {
+  event.preventDefault();
+  const input = document.getElementById('message');
+  const message = input.value.trim();
+  if (!message) return;
+  input.value = '';
+  send(message);
+});
+</script>
+</body>
+</html>
