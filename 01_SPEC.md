@@ -7,7 +7,7 @@
 **Implemented / simulated / planned:** the web page, the turn logic, the availability lookup, the ranking and the chip edits are **implemented**. The language-model step (`model.py`) is **simulated** by a rule-based extractor with the same interface as an LLM call, so the tests replay exactly. The booking itself is **simulated** (nothing is booked). A real LLM call, the park's booking system, payment and email confirmation are **planned**.
 
 ## User goal
-Alex wants a pitch that suits who is coming (two adults and their dog), their vehicle (a 6 m campervan), their dates and their need for electric hook-up, without filling in a long form, and wants to be sure the assistant has understood before booking.
+Alex wants a pitch that suits who is coming (people and any dog), their vehicle (a 6 m campervan), their dates and their need for electric hook-up, without filling in a long form, and wants to be sure the assistant has understood before booking.
 
 ## System inputs
 - **From the guest:** a free-text message such as "Hi, 2 adults, 6m campervan, 14-16 Aug, need electric hook-up", later messages, and edits made by tapping a chip.
