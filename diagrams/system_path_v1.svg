@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="938" viewBox="0 0 1500 938" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<defs><marker id="head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#33413a"/></marker></defs>
+<text x="40" y="46" font-size="24" font-weight="700" text-anchor="start" fill="#1d2a22">Danygraig booking assistant · Lab 3 · System path, v1 (before testing)</text>
+<text x="40" y="72" font-size="14.5" font-weight="400" text-anchor="start" fill="#5d6b62">One use case from the Week 2 storyboard: a guest describes their trip and gets a suitable pitch suggested. Made-up pitch data; nothing is really booked.</text>
+<rect x="1020" y="96" width="34" height="20" rx="5" fill="#f1f8f3" stroke="#2e7d4f" stroke-width="2.2"/>
+<text x="1062" y="111" font-size="14" font-weight="400" text-anchor="start" fill="#1d2a22">Implemented</text>
+<rect x="1170" y="96" width="34" height="20" rx="5" fill="#fff5e6" stroke="#c26a00" stroke-width="2.2" stroke-dasharray="7 5"/>
+<text x="1212" y="111" font-size="14" font-weight="400" text-anchor="start" fill="#1d2a22">Simulated</text>
+<rect x="1320" y="96" width="34" height="20" rx="5" fill="#f5f6f5" stroke="#8a908c" stroke-width="2.2" stroke-dasharray="2 5"/>
+<text x="1362" y="111" font-size="14" font-weight="400" text-anchor="start" fill="#1d2a22">Planned</text>
+<rect x="470" y="150" width="560" height="64" rx="10" fill="#e9f1fb" stroke="#1d4f8f" stroke-width="2.2"/>
+<text x="484" y="175" font-size="16" font-weight="650" text-anchor="start" fill="#1d2a22">Guest types a request in their own words</text>
+<text x="484" y="197" font-size="14" font-weight="400" text-anchor="start" fill="#1d2a22">e.g. "two of us plus Bella in the campervan, need power, mid August"</text>
+<rect x="470" y="254" width="560" height="64" rx="10" fill="#f1f8f3" stroke="#2e7d4f" stroke-width="2.2"/>
+<text x="484" y="279" font-size="16" font-weight="650" text-anchor="start" fill="#1d2a22">Chat page (index.html)</text>
+<text x="484" y="301" font-size="14" font-weight="400" text-anchor="start" fill="#1d2a22">sends the message, or chip edits, with the requirements so far</text>
+<rect x="470" y="358" width="560" height="64" rx="10" fill="#f1f8f3" stroke="#2e7d4f" stroke-width="2.2"/>
+<text x="484" y="383" font-size="16" font-weight="650" text-anchor="start" fill="#1d2a22">app.py: turn(message)</text>
+<text x="484" y="405" font-size="14" font-weight="400" text-anchor="start" fill="#1d2a22">builds the context parts: instructions + requirements so far + message</text>
+<rect x="470" y="462" width="560" height="84" rx="10" fill="#fff5e6" stroke="#c26a00" stroke-width="2.2" stroke-dasharray="7 5"/>
+<text x="484" y="487" font-size="16" font-weight="650" text-anchor="start" fill="#1d2a22">model.call_json(parts, SCHEMA): extract requirements</text>
+<text x="484" y="509" font-size="14" font-weight="400" text-anchor="start" fill="#1d2a22">dates, adults, children, dogs, vehicle + length, hook-up as JSON.</text>
+<text x="484" y="529" font-size="14" font-weight="400" text-anchor="start" fill="#1d2a22">The schema makes every field required, so gaps are guessed.</text>
+<rect x="470" y="586" width="560" height="84" rx="10" fill="#f1f8f3" stroke="#2e7d4f" stroke-width="2.2"/>
+<text x="484" y="611" font-size="16" font-weight="650" text-anchor="start" fill="#1d2a22">app.py: availability lookup + ranking</text>
+<text x="484" y="633" font-size="14" font-weight="400" text-anchor="start" fill="#1d2a22">keeps pitches that fit the vehicle, hook-up, dogs, party and are free</text>
+<text x="484" y="653" font-size="14" font-weight="400" text-anchor="start" fill="#1d2a22">every night; ranks them; writes the reasons for each one</text>
+<rect x="470" y="710" width="560" height="64" rx="10" fill="#f1f8f3" stroke="#2e7d4f" stroke-width="2.2"/>
+<text x="484" y="735" font-size="16" font-weight="650" text-anchor="start" fill="#1d2a22">Response shown on the chat page: render(data)</text>
+<text x="484" y="757" font-size="14" font-weight="400" text-anchor="start" fill="#1d2a22">chips (all look the same), recommended pitch + reasons, 2 other options</text>
+<rect x="470" y="814" width="560" height="84" rx="10" fill="#e9f1fb" stroke="#1d4f8f" stroke-width="2.2"/>
+<text x="484" y="839" font-size="16" font-weight="650" text-anchor="start" fill="#1d2a22">Guest's next action (guest stays in control)</text>
+<text x="484" y="861" font-size="14" font-weight="400" text-anchor="start" fill="#1d2a22">Book → check summary → Confirm   ·   tap a chip to correct it</text>
+<text x="484" y="881" font-size="14" font-weight="400" text-anchor="start" fill="#1d2a22">nothing is booked without Confirm</text>
+<path d="M 750.0 214 L 750.0 252" fill="none" stroke="#33413a" stroke-width="2" marker-end="url(#head)"/>
+<path d="M 750.0 318 L 750.0 356" fill="none" stroke="#33413a" stroke-width="2" marker-end="url(#head)"/>
+<path d="M 750.0 422 L 750.0 460" fill="none" stroke="#33413a" stroke-width="2" marker-end="url(#head)"/>
+<path d="M 750.0 546 L 750.0 584" fill="none" stroke="#33413a" stroke-width="2" marker-end="url(#head)"/>
+<path d="M 750.0 670 L 750.0 708" fill="none" stroke="#33413a" stroke-width="2" marker-end="url(#head)"/>
+<path d="M 750.0 774 L 750.0 812" fill="none" stroke="#33413a" stroke-width="2" marker-end="url(#head)"/>
+<path d="M 1110 580 A 115.0 10 0 0 1 1340 580 L 1340 676 A 115.0 10 0 0 1 1110 676 Z" fill="#ffffff" stroke="#2e7d4f" stroke-width="2.2"/>
+<path d="M 1110 580 A 115.0 10 0 0 0 1340 580" fill="none" stroke="#2e7d4f" stroke-width="2.2"/>
+<text x="1225.0" y="610" font-size="15" font-weight="650" text-anchor="middle" fill="#1d2a22">Made-up data</text>
+<text x="1225.0" y="629" font-size="14" font-weight="400" text-anchor="middle" fill="#1d2a22">data/pitches.json (14)</text>
+<text x="1225.0" y="648" font-size="14" font-weight="400" text-anchor="middle" fill="#1d2a22">data/bookings.json (7)</text>
+<path d="M 1110 628.0 L 1034 628.0" fill="none" stroke="#33413a" stroke-width="2" marker-end="url(#head)"/>
+<text x="1048" y="620.0" font-size="13.5" font-weight="400" text-anchor="start" fill="#33413a" font-style="italic">reads</text>
+<text x="1054" y="291.0" font-size="14" font-weight="400" text-anchor="start" fill="#5d6b62">HTML + JavaScript, no framework</text>
+<text x="1054" y="395.0" font-size="14" font-weight="400" text-anchor="start" fill="#5d6b62">Python 3 standard library, http://localhost:8000</text>
+<rect x="1110" y="466" width="340" height="70" rx="10" fill="#f5f6f5" stroke="#8a908c" stroke-width="2.2" stroke-dasharray="2 5"/>
+<text x="1124" y="491" font-size="15" font-weight="650" text-anchor="start" fill="#5d6b62">Real LLM call (planned)</text>
+<text x="1124" y="513" font-size="14" font-weight="400" text-anchor="start" fill="#5d6b62">same parts + SCHEMA, structured output</text>
+<path d="M 1110 501 L 1034 501" fill="none" stroke="#8a908c" stroke-width="2" marker-end="url(#head)" stroke-dasharray="6 5"/>
+<rect x="1160" y="820" width="300" height="72" rx="10" fill="#f5f6f5" stroke="#8a908c" stroke-width="2.2" stroke-dasharray="2 5"/>
+<text x="1174" y="845" font-size="15" font-weight="650" text-anchor="start" fill="#5d6b62">Park booking system, payment,</text>
+<text x="1174" y="867" font-size="14" font-weight="400" text-anchor="start" fill="#5d6b62">email confirmation (planned)</text>
+<path d="M 1034 856 L 1158 856" fill="none" stroke="#8a908c" stroke-width="2" marker-end="url(#head)" stroke-dasharray="6 5"/>
+<text x="1044" y="832" font-size="12.5" font-weight="650" text-anchor="start" fill="#c26a00">Confirm is</text>
+<text x="1044" y="848" font-size="12.5" font-weight="650" text-anchor="start" fill="#c26a00">simulated</text>
+<path d="M 470 872 L 380 872 L 380 390.0 L 468 390.0" fill="none" stroke="#33413a" stroke-width="2" marker-end="url(#head)"/>
+<text x="40" y="834" font-size="13.5" font-weight="400" text-anchor="start" fill="#33413a" font-style="italic">chip edit: straight back to turn(),</text>
+<text x="40" y="852" font-size="13.5" font-weight="400" text-anchor="start" fill="#33413a" font-style="italic">no model call needed</text>
+<text x="40" y="492" font-size="14" font-weight="650" text-anchor="start" fill="#9b2c2c">No check between the model</text>
+<text x="40" y="512" font-size="14" font-weight="400" text-anchor="start" fill="#9b2c2c">and the lookup: guessed values</text>
+<text x="40" y="532" font-size="14" font-weight="400" text-anchor="start" fill="#9b2c2c">go straight into the search.</text>
+</svg>
