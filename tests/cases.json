@@ -1,0 +1,35 @@
+{
+  "_note": "Conversations replayed through app.turn() by tests/run_tests.py. 'edits' are chip changes the guest makes.",
+  "cases": [
+    {
+      "id": "test_A",
+      "title": "Test A - standard input (the Week 2 normal storyboard)",
+      "turns": [
+        {"message": "Hi, 2 adults, 6m campervan, 14-16 Aug, need electric hook-up"}
+      ]
+    },
+    {
+      "id": "test_B",
+      "title": "Test B - problem input: vague dates, no vehicle length, and Bella could be a person or a pet",
+      "turns": [
+        {"message": "hi, two of us plus Bella in the campervan, need power, mid August"},
+        {"edits": {"dogs": "1 dog", "adults": "2"}, "why": "the guest spots '3 adults' and 'pets: none' and corrects them"}
+      ]
+    },
+    {
+      "id": "out_of_scope",
+      "title": "Out-of-scope request",
+      "turns": [
+        {"message": "Can you book me a table at the pub on Saturday?"}
+      ]
+    },
+    {
+      "id": "data_unavailable",
+      "title": "Data source unavailable (pitch and booking files can't be read)",
+      "data_dir": "missing-folder",
+      "turns": [
+        {"message": "Hi, 2 adults, 6m campervan, 14-16 Aug, need electric hook-up"}
+      ]
+    }
+  ]
+}
