@@ -30,6 +30,16 @@
   .chip { border: 1.5px solid var(--chip-line); background: var(--chip); color: var(--chip-ink);
           border-radius: 999px; padding: 3px 11px; font: inherit; font-size: .9rem; cursor: pointer; }
   .chip:hover { filter: brightness(.97); }
+  /* v2: show where each value came from, in words as well as colour */
+  .chip .tag { font-size: .72rem; font-weight: 650; margin-left: 6px; text-transform: uppercase; letter-spacing: .03em; }
+  .chip.assumed { background: #fff1e0; border-color: #e08a1e; color: #8a4b00; }
+  .chip.edited { background: #e8f6ec; border-color: #3f9a5f; color: #1f5f36; }
+  .chip.vague, .chip.missing, .chip.unclear { background: #fff; border: 1.5px dashed #c2410c; color: #9a3412; }
+  .legend { font-size: .78rem; color: var(--muted); margin-top: 6px; }
+  .legend b { font-weight: 650; }
+  .questions { margin: 10px 0 0; padding-left: 20px; }
+  .questions li { margin: 4px 0; }
+  .quick { display: flex; gap: 6px; flex-wrap: wrap; margin: 4px 0 2px; }
   .chip:focus-visible, button:focus-visible, input:focus-visible { outline: 3px solid var(--focus); outline-offset: 1px; }
   .chip-edit { border: 1.5px solid var(--chip-line); border-radius: 999px; padding: 3px 11px;
                font: inherit; font-size: .9rem; width: 12em; }
@@ -111,9 +121,14 @@ async function send(message, edits = null, shown = message) {
   scrollDown();
 }
 
+const TAGS = {assumed: 'assumed', edited: 'changed', vague: '?', missing: '?', unclear: '?'};
+
 function chipButton(chip) {
-  const button = el('button', {class: 'chip', type: 'button', 'data-field': chip.field,
-                               'aria-label': chip.label + ' (tap to change)'}, chip.label);
+  const tag = TAGS[chip.source];
+  const button = el('button', {class: 'chip ' + (chip.source || ''), type: 'button', 'data-field': chip.field,
+                               'aria-label': chip.label + (tag ? ` (${chip.source})` : '') + ', tap to change'},
+                    chip.label, tag ? el('span', {class: 'tag'}, tag) : null);
+  if (chip.evidence) button.title = (chip.source === 'assumed' ? 'Assumed: ' : 'From: ') + chip.evidence;
   button.addEventListener('click', () => {
     const input = el('input', {class: 'chip-edit', placeholder: chip.hint || 'new value',
                                'aria-label': 'Change ' + chip.label});
@@ -169,6 +184,19 @@ function render(data) {
   const bubble = el('div', {class: 'msg bot'}, data.reply);
   if (data.chips && data.chips.length) {
     bubble.append(el('div', {class: 'chips'}, ...data.chips.map(chipButton)));
+    const sources = new Set(data.chips.map(chip => chip.source));
+    if (sources.has('assumed') || sources.has('vague') || sources.has('missing') || sources.has('unclear')) {
+      bubble.append(el('div', {class: 'legend'}, el('b', {}, 'Orange'), ' = I assumed this · ',
+                       el('b', {}, 'dashed'), ' = I need to check · tap any chip to change it'));
+    }
+  }
+  if (data.questions && data.questions.length) {
+    bubble.append(el('ol', {class: 'questions'}, ...data.questions.map(question =>
+      el('li', {}, question.text,
+         question.quick_replies && question.quick_replies.length
+           ? el('div', {class: 'quick'}, ...question.quick_replies.map(reply =>
+               el('button', {class: 'secondary', type: 'button', onclick: () => send(reply)}, reply)))
+           : null))));
   }
   if (data.recommendation) bubble.append(pitchCard(data.recommendation, bubble));
   if (data.alternatives && data.alternatives.length) {

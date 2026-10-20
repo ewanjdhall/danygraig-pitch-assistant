@@ -7,9 +7,15 @@ output).
 SIMULATED HERE: a small rule-based extractor with the same interface,
 `call_json(parts, schema)`. It needs no API key or network and always gives
 the same answer for the same input, so Test A and Test B can be replayed
-exactly. Like a model asked to fill every field of a strict schema, it fills
-gaps with plausible guesses: vague dates become a definite stay, an unknown
-name becomes another adult, and a missing vehicle length becomes a typical one.
+exactly. It behaves the way a model would under each schema:
+
+* v1 schema: every field is required and must hold a value, so gaps are filled
+  with plausible guesses (vague dates become a definite stay, an unknown name
+  becomes another adult, a missing vehicle length becomes a typical one), and
+  nothing in the output says which values were guessed.
+* v2 schema: every field carries value + source (stated / assumed / vague /
+  missing) + evidence (the guest's words), and names that could be a person or
+  a pet are listed in unclear_names instead of being counted.
 """
 
 import json
@@ -343,9 +349,137 @@ def _has_booking_details(found):
                 found["dogs"] or found["vehicle"] or found["length"] or found["hookup"])
 
 
+def _field(value, source, evidence=""):
+    return {"value": value, "source": source, "evidence": evidence}
+
+
+def _answer_about_one_name(text):
+    """A reply about the only unclear name, e.g. "she's our dog" or just "a pet"."""
+    pet = re.search(r"\b(?:she|he|it|they)(?:'s|\s+is|\s+are)\s+(?:our|my|a|the)?\s*" + _PET_WORDS +
+                    r"\b|^\s*(?:a\s+|our\s+)?(?:dog|pet)\s*\.?\s*$", text, re.I)
+    if pet:
+        return "pet", pet.group(0).strip()
+    guest = re.search(r"\b(?:she|he|they)(?:'s|\s+is|\s+are)\s+(?:a\s+|an\s+)?" + _GUEST_WORDS +
+                      r"\b|^\s*(?:a\s+)?(?:guest|person|adult)\s*\.?\s*$", text, re.I)
+    if guest:
+        return "guest", guest.group(0).strip()
+    return None
+
+
+def _with_sources(found, previous, text):
+    """v2 schema: every field says where its value came from, so nothing has to be guessed."""
+    prev = previous or {}
+    out = {}
+    for name in FIELDS:
+        old = prev.get(name)
+        out[name] = dict(old) if isinstance(old, dict) else _field(None, "missing")
+
+    # Names that could be a person or a pet: resolve earlier ones, then add new ones.
+    pending = [dict(item) for item in prev.get("unclear_names", [])]
+    resolved = {"pet": [], "guest": [], "child": []}
+    unclear = []
+    for item in pending:
+        kind = classify_name(item["name"], text)
+        if not kind and len(pending) == 1:
+            kind = _answer_about_one_name(text)
+        if kind:
+            resolved[kind[0]].append((item["name"], kind[1]))
+        else:
+            unclear.append(item)
+    for name, evidence in found["names"]:
+        if any(item["name"] == name for item in pending):
+            continue
+        kind = classify_name(name, text)
+        if kind:
+            resolved[kind[0]].append((name, kind[1]))
+        else:
+            unclear.append({"name": name, "evidence": evidence})
+
+    # Dates: never turn a vague date into a definite one.
+    dates = found["dates"]
+    if dates["kind"] == "range":
+        out["check_in"] = _field(dates["check_in"].isoformat(), "stated", dates["evidence"])
+        out["check_out"] = _field(dates["check_out"].isoformat(), "stated", dates["evidence"])
+    elif dates["kind"] == "single":
+        out["check_in"] = _field(dates["check_in"].isoformat(), "stated", dates["evidence"])
+        if dates["nights"]:
+            end = dates["check_in"] + timedelta(days=dates["nights"])
+            out["check_out"] = _field(end.isoformat(), "stated", dates["evidence"])
+        else:
+            out["check_out"] = _field(None, "missing", "no number of nights given")
+    elif dates["kind"] in ("vague", "invalid"):
+        note = dates["evidence"] if dates["kind"] == "vague" else dates["evidence"] + " (not a date I can use)"
+        out["check_in"] = _field(None, "vague", note)
+        out["check_out"] = _field(None, "vague", note)
+    elif dates["kind"] == "nights_only" and out["check_in"]["value"]:
+        end = date.fromisoformat(out["check_in"]["value"]) + timedelta(days=dates["nights"])
+        out["check_out"] = _field(end.isoformat(), "stated", dates["evidence"])
+
+    # Who is coming.
+    party = found["party"]
+    if "adults" in party:
+        out["adults"] = _field(party["adults"][0], "stated", party["adults"][1])
+    for name, evidence in resolved["guest"]:
+        adults = (out["adults"]["value"] or 0) + 1
+        out["adults"] = _field(adults, "stated", f"{out['adults']['evidence']} + {evidence}".strip(" +"))
+    if "children" in party:
+        out["children"] = _field(party["children"][0], "stated", party["children"][1])
+    for name, evidence in resolved["child"]:
+        out["children"] = _field((out["children"]["value"] or 0) + 1, "stated", evidence)
+    if out["children"]["value"] is None:
+        out["children"] = _field(0, "assumed", "no children mentioned")
+
+    # Dogs: an explicit count, pets named in this message, or an assumption.
+    previous_dogs = out["dogs"]["value"] if out["dogs"]["source"] in ("stated", "edited") else 0
+    new_pets = resolved["pet"]
+    if found["dogs"] and found["dogs"][0] == 0:
+        out["dogs"] = _field(0, "stated", found["dogs"][1])
+    elif found["dogs"]:
+        count = max(found["dogs"][0], (previous_dogs or 0) + len(new_pets))
+        evidence = new_pets[0][1] if new_pets else found["dogs"][1]
+        out["dogs"] = _field(count, "stated", evidence)
+    elif new_pets:
+        out["dogs"] = _field((previous_dogs or 0) + len(new_pets), "stated", new_pets[0][1])
+    elif out["dogs"]["source"] not in ("stated", "edited"):
+        out["dogs"] = _field(0, "assumed", "no dog mentioned")
+
+    # Vehicle, length and hook-up.
+    old_vehicle = out["vehicle"]["value"]
+    if found["vehicle"]:
+        out["vehicle"] = _field(found["vehicle"][0], "stated", found["vehicle"][1])
+    vehicle = out["vehicle"]["value"]
+    if found["length"]:
+        out["vehicle_length_m"] = _field(found["length"][0], "stated", found["length"][1])
+    elif vehicle == "tent":
+        out["vehicle_length_m"] = _field(0.0, "stated", "tent")
+    elif vehicle and (vehicle != old_vehicle or out["vehicle_length_m"]["value"] is None):
+        typical = TYPICAL_LENGTH_M[vehicle]
+        out["vehicle_length_m"] = _field(typical, "assumed",
+                                         f"no length given; a typical {vehicle} is about {typical:g} m")
+    if found["hookup"]:
+        out["hookup"] = _field(found["hookup"][0], "stated", found["hookup"][1])
+    elif out["hookup"]["value"] is None:
+        out["hookup"] = _field(False, "assumed", "hook-up not mentioned")
+
+    out["unclear_names"] = unclear
+    answered = any(resolved.values())
+    out["out_of_scope"] = None
+    if found["out_of_scope"] and not _has_booking_details(found) and not answered:
+        out["out_of_scope"] = found["out_of_scope"]
+    return out
+
+
+def _wants_sources(schema):
+    """The v2 schema describes each field as an object with value, source and evidence."""
+    check_in = schema.get("properties", {}).get("check_in", {})
+    return check_in.get("type") == "object"
+
+
 def call_json(parts, schema):
     """Stand-in for an LLM structured-output call: returns a dict matching `schema`."""
     text = _latest_user_text(parts).replace("\u2019", "'")  # curly apostrophes
     previous = _previous_requirements(parts)
     found = extract(text)
+    if _wants_sources(schema):
+        return _with_sources(found, previous, text)
     return _fill_every_field(found, previous, text)
