@@ -2,7 +2,7 @@
 
 **Use case (from my Week 2 storyboard):** a guest describes their trip to the Danygraig booking assistant in their own words and gets a suitable touring pitch suggested, with the chance to check and correct what the assistant understood before anything is booked. The pitch data is made up and Alex and Bella are placeholder names.
 
-**Route:** a small prototype (Python + one web page). Run `python app.py` and open <http://localhost:8000>. `python tests/run_tests.py` replays the test conversations and writes what happened to `tests/results/`.
+**Route:** a small prototype (Python + one web page, no extra packages). Run `python app.py` and open <http://localhost:8000> (the revised v2). `python app.py --v1` runs the original version. `python tests/run_tests.py` replays every test conversation on both versions and writes what happened to `tests/results/`.
 
 **Implemented / simulated / planned:** the web page, the turn logic, the availability lookup, the ranking and the chip edits are **implemented**. The language-model step (`model.py`) is **simulated** by a rule-based extractor with the same interface as an LLM call, so the tests replay exactly. The booking itself is **simulated** (nothing is booked). A real LLM call, the park's booking system, payment and email confirmation are **planned**.
 
@@ -33,12 +33,15 @@ The page shows "Here's what I understood. Tap anything that's wrong." with chips
 - **Data unavailable** (the pitch or booking file can't be read): it says it can't check which pitches are free and won't suggest one. *(implemented)*
 - **No pitch fits:** it says so and lists the closest pitches, each with the one thing that rules it out (for example "Pitch 8: it's booked 15–19 Aug"). *(implemented)*
 - **The page can't reach the server:** it says so instead of guessing. *(implemented)*
-- **Missing or ambiguous information:** v1 fills it in with a guess. Test B shows why that is a problem; see Review and revision.
+- **Missing or ambiguous information:**
+  - v1 filled it in with a guess. Test B shows why that is a problem.
+  - v2 asks before suggesting a pitch when the dates, the party or the vehicle are missing or vague, or a name could be a person or a pet.
+  - v2 shows lower-risk assumptions, such as vehicle length, pets and hook-up, as orange "assumed" chips that can be changed. See Review and revision.
 
 ## System path or interaction diagram
 ![System path, v1](diagrams/system_path_v1.png)
 
-`diagrams/system_path_v1.png` (source: `system_path_v1.svg`). Solid green = implemented, orange dashed = simulated, grey dotted = planned.
+`diagrams/system_path_v1.png` (source: `system_path_v1.svg`). Solid green = implemented, orange dashed = simulated, grey dotted = planned. The revised path after Phase 4 is in `diagrams/system_path_v2.png`, shown under Review and revision.
 
 ## Test A: standard input
 Input: "Hi, 2 adults, 6m campervan, 14-16 Aug, need electric hook-up" (Alex in my Week 2 normal storyboard).
@@ -79,3 +82,53 @@ Response and next action: the chips `15–17 Aug (2 nights)` `3 adults` `camperv
 **Problem chosen:** the assistant guesses missing or ambiguous details and shows the guesses as facts.
 - **Interaction side:** it never asks, and it doesn't distinguish stated values from guessed ones.
 - **System side:** the extraction schema can't say "unknown", and nothing checks the requirements before the search.
+
+### Phase 4: revision (v2)
+**Interaction change.** Before suggesting a pitch, the assistant now asks a clarification question when:
+- the dates, the party or the vehicle are missing or vague;
+- a name could be a person or a pet.
+
+It asks at most two questions a turn, and quotes the guest's own words ("You said “mid August”"). The Bella question has quick-reply buttons. Values it assumed appear as orange chips marked ASSUMED, with the reason on hover. Vague or unclear values appear as dashed chips marked "?". Every chip can still be tapped and changed. This is the lesson from my Week 2 failure storyboard ("ask when it's not sure", "show guesses differently").
+
+**Technology change.**
+- **Schema:** the extraction schema (`SCHEMA_V2` in `app.py`) now returns `value` + `source` (stated / assumed / vague / missing / edited) + `evidence` (the guest's words) for every field, plus a list of `unclear_names`. The model instructions now say "never guess dates or how many people are coming".
+- **Validation:** a new step, `validate()` in `app.py`, checks the requirements before the availability lookup runs: dates known and in season, party known, vehicle known, no unclear names. If anything fails, no pitch is suggested yet.
+- **Assumptions:** lower-risk gaps (vehicle length, pets, hook-up) are filled with an assumption that stays visible rather than triggering a question.
+
+The original path still runs with `python app.py --v1`, and `tests/run_tests.py` runs every case on both versions.
+
+**Updated diagram:** `diagrams/system_path_v2.png` (purple tags mark what changed).
+
+![System path, v2](diagrams/system_path_v2.png)
+
+**Test B again (v2):**
+
+| Turn | Guest | What the system did | What it returned |
+|---|---|---|---|
+| 1 | "hi, two of us plus Bella in the campervan, need power, mid August" | The model step returned dates **vague** ("mid August"), adults 2 **stated** ("two of us"), Bella in `unclear_names`, campervan stated, length 6 m **assumed**, hook-up stated. Validation found 2 problems, so there was **no lookup** | Chips `dates: mid August? (?)` `2 adults` `Bella: guest or pet? (?)` `campervan ~6 m (ASSUMED)` `hook-up`; the questions "Which nights exactly? You said “mid August”." and "Is Bella coming as a guest or a pet?" [Bella is a guest] [Bella is a pet]. Nothing to book yet |
+| 2 | "14-16 Aug, Bella's our dog" | Dates **stated** 14–16 Aug; dogs 1 **stated** ("Bella's our dog"); validation passed; the lookup found Pitches 12, 14 and 11 | "Thanks, Bella is down as a dog… I've assumed the orange ones." **Pitch 12, Dog-friendly field (hardstanding)**: takes a campervan up to 8 m (I've assumed yours is about 6 m), hook-up, dogs welcome, free 14–16 Aug, £54 in total; two other options. Next: Book → Confirm, or change the orange chip |
+
+v1 suggested a no-dogs pitch on dates the guest never chose. v2 reaches the pitch from my Week 2 recovery storyboard (Pitch 12) on the right dates, in one extra turn. Evidence: `tests/results/test_B_v2.md`, `screenshots/v2_test_B.png`.
+
+**Checks that v2 didn't break anything** (`tests/results/SUMMARY.md`):
+- **Test A** still gets Pitch 7 in one turn, with `pets: none` shown as assumed.
+- **A clearly named dog** ("our dog Bella", `named_dog`) gets no question.
+- **The Week 2 failure message**, which gives the dates and length, gets only the Bella question:
+  - v1 had offered Pitch 7, in a no-dogs area, for 3 adults;
+  - v2 offers Pitch 12 once "Bella is a pet" is tapped.
+- **Out of scope and data unavailable** behave as before.
+
+**Why this improves the interaction and the system path.** In v1 a guess went straight into the search and looked like a fact, so Alex could book a no-dogs pitch on dates they never chose. In v2 the uncertainty the model finds is kept in the data and checked before the search. The assistant asks only about what would make the suggestion wrong (dates, who's coming) and leaves smaller assumptions visible and one tap from correction. This follows Amershi et al.'s (2019) "scope services when in doubt" (G10) and makes "support efficient correction" (G9) work, because Alex can now see which chips to check. The cost is one extra turn when a request is vague; clear requests like Test A still get a pitch straight away.
+
+**Limitations.**
+- The model step is simulated with rules, so these tests check the system path and interaction, not how well a real LLM extracts requirements. A real model could still be confidently wrong, and the validation step and visible sources are meant to catch that.
+- Everything is limited to one made-up park, English and the 2027 season.
+- Pets are treated as dogs.
+- Booking and payment are simulated.
+
+## Files in this folder
+- **Prototype:** `app.py` (server, `turn()`, validation, lookup, chips), `model.py` (simulated model step), `index.html` (chat page, `render(data)`), `data/` (made-up pitches and bookings).
+- **Tests:** `tests/cases.json` and `tests/run_tests.py` (replay every case on v1 and v2); `tests/results/` (what happened, one file per case and version, plus `SUMMARY.md`); `screenshots/` (v1 and v2, Tests A and B).
+- **Diagrams:** `diagrams/system_path_v1.*` and `system_path_v2.*` (SVG and PNG).
+- **Storyboard:** `storyboard/` (my Week 2 worksheet and storyboard images).
+- **AI use:** `02_PROMPT_LOG.md`.
