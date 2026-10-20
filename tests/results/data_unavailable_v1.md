@@ -11,7 +11,7 @@
 
 **What it did**
 
-- Loading the pitch data failed: `[Errno 2] No such file or directory: '/home/claude/lab3/lab3_pack/missing-folder/pitches.json'`. No model call and no lookup.
+- Loading the pitch data failed: `could not read missing-folder/pitches.json (FileNotFoundError)`. No model call and no lookup.
 
 **What it returned**
 

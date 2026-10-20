@@ -100,14 +100,16 @@ class DataUnavailable(Exception):
 
 
 def load_data():
-    try:
-        with open(os.path.join(DATA_DIR, "pitches.json"), encoding="utf-8") as f:
-            pitches = json.load(f)["pitches"]
-        with open(os.path.join(DATA_DIR, "bookings.json"), encoding="utf-8") as f:
-            bookings = json.load(f)["bookings"]
-    except (OSError, ValueError, KeyError) as error:
-        raise DataUnavailable(str(error))
-    return pitches, bookings
+    loaded = {}
+    for name, key in (("pitches.json", "pitches"), ("bookings.json", "bookings")):
+        path = os.path.join(DATA_DIR, name)
+        try:
+            with open(path, encoding="utf-8") as f:
+                loaded[key] = json.load(f)[key]
+        except (OSError, ValueError, KeyError) as error:
+            where = os.path.relpath(path, HERE) if os.path.isabs(path) else path
+            raise DataUnavailable(f"could not read {where} ({type(error).__name__})")
+    return loaded["pitches"], loaded["bookings"]
 
 
 # --------------------------------------------------------------------------
