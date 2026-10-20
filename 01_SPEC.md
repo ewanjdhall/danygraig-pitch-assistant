@@ -65,4 +65,17 @@ Nothing checks these values before the lookup, which returns Pitch 3 first.
 Response and next action: the chips `15–17 Aug (2 nights)` `3 adults` `campervan 6 m` `hook-up` `pets: none` all look equally certain. It recommends **Pitch 3, Orchard (grass)**: "quiet, no-dogs area", free 15–17 Aug, £50 in total. The guest could book a no-dogs pitch for dates they never chose. If they notice and tap the chips (`pets: none → 1 dog`, `3 adults → 2`), it says "Pitch 3 doesn't work any more (dogs aren't allowed there)" and offers **Pitch 12** (dog-friendly). But the guessed dates 15–17 Aug stay, and nothing shows they were a guess. Evidence: `tests/results/test_B_v1.md`, `screenshots/v1_test_B.png`.
 
 ## Review and revision
-Use the tests to identify an interaction or system problem. Note the evidence, then describe one interaction change and one technology or system change. Explain why the changes help and run Test B again.
+
+### Phase 3: review of v1
+| Question | Evidence | Problem found |
+|---|---|---|
+| Did it make clear what it can and cannot do? | The opening message gives the scope (2027 touring and tent pitches, no payments, no real booking). Out-of-scope test: "Sorry, I can only help you choose a touring or tent pitch… please contact reception" (`tests/results/out_of_scope_v1.md`) | Mostly yes |
+| Did it show what it understood? | Test B: the chips appear before anything is booked | Only partly. Guessed values look exactly like stated ones: `15–17 Aug` and `3 adults` look as certain as `hook-up`, so Alex can't tell what to check |
+| Could the person correct a wrong extraction? | Test B turn 2: two chip edits lead to Pitch 12 | Yes, one tap per chip, but only if they notice. The guessed dates stayed wrong |
+| Did it ask for missing information instead of guessing? | Test B: "mid August" became 15–17 Aug, "plus Bella" became 3 adults, and no length became 6 m | **No.** This is the main problem. The schema needs a value in every field, so the model step guesses, and nothing between the model and the lookup checks the result |
+| Did it keep the person in control of the next action? | Book shows a summary and nothing happens until Confirm; the assistant never books by itself | Yes |
+| Did it respond honestly when a data source was unavailable? | `tests/results/data_unavailable_v1.md`: "I can't check which pitches are free right now, so I won't suggest one." | Yes |
+
+**Problem chosen:** the assistant guesses missing or ambiguous details and shows the guesses as facts.
+- **Interaction side:** it never asks, and it doesn't distinguish stated values from guessed ones.
+- **System side:** the extraction schema can't say "unknown", and nothing checks the requirements before the search.
