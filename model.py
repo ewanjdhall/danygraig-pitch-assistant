@@ -16,8 +16,17 @@ exactly. It behaves the way a model would under each schema:
 * v2 schema: every field carries value + source (stated / assumed / vague /
   missing) + evidence (the guest's words), and names that could be a person or
   a pet are listed in unclear_names instead of being counted.
+* v3 schema (Lab 4): the v2 schema plus a `question` field. When the guest asks
+  about the park instead of describing their stay, the question is copied there
+  and the requirements are returned unchanged, so the app can answer it from the
+  guest information (retrieve.py) without touching the booking.
+
+Lab 4 also adds answer_from_passages(), the SIMULATED answer step for those
+questions: it quotes the chosen passage word for word instead of writing an
+answer. PLANNED: a real model writes a short answer from the quoted passages.
 """
 
+import copy
 import json
 import re
 from datetime import date, timedelta
@@ -246,11 +255,36 @@ _OUT_OF_SCOPE = [
 ]
 
 
-def find_out_of_scope(text):
-    for pattern, topic in _OUT_OF_SCOPE:
+# v3 (Lab 4): only a request to change or cancel a booking is out of scope; a question about the
+# cancellation policy is answered from the guest information instead.
+_EXISTING_BOOKING_V3 = (r"\b(?:cancel|change|amend|move)\s+(?:my|our|the|a)\s+booking\b|"
+                        r"\brefund\s+(?:my|our|me)\b|\b(?:my|our|existing)\s+booking\b",
+                        "changing or cancelling an existing booking")
+
+
+def find_out_of_scope(text, v3=False):
+    rules = _OUT_OF_SCOPE
+    if v3:
+        rules = [rule for rule in _OUT_OF_SCOPE if "cancel" not in rule[0]] + [_EXISTING_BOOKING_V3]
+    for pattern, topic in rules:
         if re.search(pattern, text, re.I):
             return topic
     return None
+
+
+_QUESTION_START = re.compile(r"^\s*(?:what(?:'s|s)?|when|where|which|who|why|how|can|could|do|does|"
+                             r"did|is|are|will|would|may|should|am|have|has)\b", re.I)
+
+
+def is_question(text):
+    return text.strip().endswith("?") or bool(_QUESTION_START.search(text))
+
+
+def _describes_a_stay(found):
+    """Dates, who is coming, a name or a vehicle mean the guest is describing their stay.
+    A dog or hook-up on its own does not ("Can I bring my dog?" is a question about the rules)."""
+    return bool(found["dates"]["kind"] != "none" or found["party"] or found["names"] or
+                found["vehicle"] or found["length"])
 
 
 # --------------------------------------------------------------------------
@@ -279,7 +313,7 @@ def _first_friday():
     return day
 
 
-def extract(text):
+def extract(text, v3=False):
     """Everything the message says, before any guessing."""
     return {
         "dates": find_dates(text),
@@ -289,7 +323,7 @@ def extract(text):
         "vehicle": find_vehicle(text),
         "length": find_length(text),
         "hookup": find_hookup(text),
-        "out_of_scope": find_out_of_scope(text),
+        "out_of_scope": find_out_of_scope(text, v3),
     }
 
 
@@ -475,11 +509,36 @@ def _wants_sources(schema):
     return check_in.get("type") == "object"
 
 
+def _routes_questions(schema):
+    """The v3 schema has a `question` field for questions about the park."""
+    return "question" in schema.get("properties", {})
+
+
 def call_json(parts, schema):
     """Stand-in for an LLM structured-output call: returns a dict matching `schema`."""
     text = _latest_user_text(parts).replace("\u2019", "'")  # curly apostrophes
     previous = _previous_requirements(parts)
-    found = extract(text)
+    v3 = _routes_questions(schema)
+    found = extract(text, v3)
+    if v3 and is_question(text) and not _describes_a_stay(found) and not found["out_of_scope"]:
+        out = copy.deepcopy(previous) if previous else {}
+        out["question"] = text.strip()  # requirements unchanged: a question never edits the booking
+        out["out_of_scope"] = None
+        return out
     if _wants_sources(schema):
-        return _with_sources(found, previous, text)
-    return _fill_every_field(found, previous, text)
+        out = _with_sources(found, previous, text)
+    else:
+        out = _fill_every_field(found, previous, text)
+    if v3:
+        out["question"] = None
+    return out
+
+
+def answer_from_passages(parts, passage):
+    """SIMULATED answer step (Lab 4): quote the chosen passage word for word.
+
+    `parts` is what a real model would receive (instructions, the quoted passages and the question).
+    PLANNED: a real model writes a one-sentence answer from those passages, and the app checks that
+    the answer's claims appear in the passage before showing it. Quoting avoids adding anything the
+    passage does not say."""
+    return {"answer": passage["text"], "quoted": True}
