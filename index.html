@@ -57,6 +57,32 @@
   details.trace { margin-top: 8px; font-size: .78rem; color: var(--muted); }
   details.trace pre { white-space: pre-wrap; word-break: break-word; background: #f7f8f7; border: 1px solid var(--line);
                       border-radius: 8px; padding: 8px; max-height: 260px; overflow: auto; }
+  /* Lab 4: answers with their source, the stale warning, the hold confirmation and the image check */
+  .answer { margin: 8px 0 4px; padding: 8px 12px; border-left: 4px solid var(--brand); background: #fff; font-style: italic; }
+  .evidence { margin-top: 10px; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; background: #fff; font-size: .88rem; }
+  .evidence h4 { margin: 0 0 6px; font-size: .9rem; }
+  .evidence .hit { margin: 6px 0; padding-top: 6px; border-top: 1px dashed var(--line); }
+  .evidence .hit:first-of-type { border-top: 0; padding-top: 0; }
+  .evidence .meta { font-size: .78rem; color: var(--muted); }
+  .evidence .used { font-weight: 650; color: var(--ok); }
+  .evidence .old { font-weight: 650; color: #9a3412; }
+  .evidence .hit.superseded .quote { text-decoration: line-through; color: var(--muted); }
+  .warning { margin-top: 8px; padding: 8px 10px; border-radius: 8px; background: #fff4e5; border: 1.5px solid #e08a1e; color: #7a3e00; font-size: .9rem; }
+  .declined { margin-top: 6px; font-size: .82rem; color: var(--muted); }
+  .confirm { margin-top: 10px; border: 2px solid var(--brand); border-radius: 12px; padding: 12px 14px; background: #fff; }
+  .confirm p { margin: 0 0 6px; }
+  .confirm dl { display: grid; grid-template-columns: max-content 1fr; gap: 2px 12px; margin: 6px 0 10px; font-size: .9rem; }
+  .confirm dt { color: var(--muted); }
+  .confirm dd { margin: 0; }
+  .confirm .tag-assumed { color: #8a4b00; font-weight: 650; }
+  .confirm .meta { font-size: .8rem; color: var(--muted); }
+  .result { margin-top: 8px; font-size: .85rem; color: var(--muted); }
+  .refused { color: #9a3412; }
+  .image-result { margin-top: 8px; border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; background: #fff; font-size: .9rem; }
+  .image-result .meta { font-size: .78rem; color: var(--muted); }
+  .confidence { display: inline-block; padding: 1px 8px; border-radius: 999px; background: #e8f6ec; border: 1px solid #3f9a5f; color: #1f5f36; font-weight: 650; font-size: .8rem; }
+  details.checks { padding: 0 18px 14px; font-size: .85rem; color: var(--muted); }
+  details.checks .row { margin-top: 6px; }
   form { display: flex; gap: 8px; padding: 12px 18px 18px; border-top: 1px solid var(--line); }
   form input { flex: 1; min-width: 0; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; font: inherit; }
   .typing { color: var(--muted); font-style: italic; font-size: .9rem; }
@@ -70,8 +96,9 @@
   </header>
   <main id="log" aria-live="polite">
     <div class="msg bot">Hi! Who's coming, when, and what are you bringing?
-      <div class="note">I can suggest a touring or tent pitch for the 2027 season. I can't take payments,
-        and in this prototype I can't make a real booking.</div>
+      <div class="note">I can suggest a touring or tent pitch for the 2027 season and answer questions from
+        the park's guest information (arrival times, dogs, hook-up, cancellations). I can hold a pitch for
+        48 hours, but I can't take payments, and in this prototype nothing is really booked.</div>
     </div>
   </main>
   <form id="ask">
@@ -79,11 +106,22 @@
     <input id="message" autocomplete="off" placeholder="e.g. 2 adults, 6m campervan, 14-16 Aug, need hook-up">
     <button class="primary" type="submit">Send</button>
   </form>
+  <details class="checks">
+    <summary>Lab 4 checks (for markers)</summary>
+    <p>These use the lab's two sample images and a hand-written hold request, not the guest conversation.</p>
+    <div class="row">
+      <button class="secondary" type="button" id="check-poster">Poster image: what deadline is shown?</button>
+      <button class="secondary" type="button" id="check-noticeboard">Noticeboard image: what deadline is shown?</button>
+      <button class="secondary" type="button" id="check-invalid">Invalid hold request (21 nights)</button>
+    </div>
+  </details>
 </div>
 
 <script>
 let state = null;
 const log = document.getElementById('log');
+// One id per page load: the hold tool allows one hold per session. Not personal data.
+const SESSION = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Math.random()).slice(2);
 
 function el(tag, attrs = {}, ...children) {
   const node = document.createElement(tag);
@@ -101,14 +139,14 @@ function el(tag, attrs = {}, ...children) {
 
 function scrollDown() { log.scrollTop = log.scrollHeight; }
 
-async function send(message, edits = null, shown = message) {
+async function send(message, edits = null, shown = message, action = null) {
   if (shown) log.append(el('div', {class: 'msg user'}, shown));
   const typing = el('div', {class: 'typing'}, "checking what's free…");
   log.append(typing); scrollDown();
   try {
     const response = await fetch('/api/turn', {
       method: 'POST', headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({message, state, edits})
+      body: JSON.stringify({message, state, edits, action, session: SESSION})
     });
     const data = await response.json();
     typing.remove();
@@ -148,13 +186,19 @@ function chipButton(chip) {
   return button;
 }
 
-function pitchCard(card, bubble) {
+function pitchCard(card, bubble, canHold) {
+  const main = canHold
+    ? el('button', {class: 'primary', type: 'button', onclick: (event) => {
+        event.target.disabled = true;
+        send('', null, `Hold ${card.name}`, {type: 'propose_hold', pitch: card.id});
+      }}, 'Hold this pitch')
+    : el('button', {class: 'primary', type: 'button', onclick: () => confirmBooking(card, bubble)}, 'Book');
   return el('div', {class: 'pitch'},
     el('h3', {}, card.title),
     el('ul', {}, ...card.reasons.map(reason => el('li', {}, reason))),
     el('div', {class: 'price'}, card.price),
     el('div', {class: 'row'},
-      el('button', {class: 'primary', type: 'button', onclick: () => confirmBooking(card, bubble)}, 'Book'),
+      main,
       el('button', {class: 'secondary', type: 'button', onclick: () => {
         const first = bubble.querySelector('.chip');
         if (first) first.focus();
@@ -178,6 +222,62 @@ function confirmBooking(card, bubble) {
   scrollDown();
 }
 
+function evidenceCard(hits) {
+  return el('div', {class: 'evidence'},
+    el('h4', {}, 'Where this comes from'),
+    ...hits.map(h => el('div', {class: 'hit' + (h.superseded ? ' superseded' : '')},
+      el('div', {class: 'meta'},
+        h.used ? el('span', {class: 'used'}, 'Used for the answer · ') : null,
+        h.superseded ? el('span', {class: 'old'}, 'SUPERSEDED · ') : null,
+        `${h.source} · ${h.section} · updated ${h.date} · score ${h.score.toFixed(2)}`),
+      el('div', {class: 'quote'}, '“' + h.text + '”'))),
+    el('div', {class: 'meta'}, 'The score ranks passages for this question; it is not a probability.'));
+}
+
+function holdCard(hold) {
+  if (hold.stage === 'confirm') {
+    const a = hold.args;
+    const assumed = new Set(hold.assumed || []);
+    const n = (count, word, plural) => `${count} ${count === 1 ? word : (plural || word + 's')}`;
+    const mark = (field) => assumed.has(field) ? el('span', {class: 'tag-assumed'}, ' (assumed)') : null;
+    const yes = el('button', {class: 'primary', type: 'button'}, `Hold Pitch ${hold.pitch}`);
+    const no = el('button', {class: 'secondary', type: 'button'}, 'Cancel');
+    const done = () => { yes.disabled = true; no.disabled = true; };
+    yes.addEventListener('click', () => { done(); send('', null, 'Confirm the hold', {type: 'confirm_hold', proposal: hold.proposal}); });
+    no.addEventListener('click', () => { done(); send('', null, 'Cancel', {type: 'cancel_hold', proposal: hold.proposal}); });
+    return el('div', {class: 'confirm'},
+      el('p', {}, el('strong', {}, hold.question)),
+      el('dl', {},
+        el('dt', {}, 'pitch'), el('dd', {}, String(a.pitch)),
+        el('dt', {}, 'nights'), el('dd', {}, `${a.check_in} to ${a.check_out}`),
+        el('dt', {}, 'party'), el('dd', {}, `${n(a.adults, 'adult')}, ${n(a.children, 'child', 'children')}`, mark('children'),
+                                  `, ${n(a.dogs, 'dog')}`, mark('dogs')),
+        el('dt', {}, 'vehicle'), el('dd', {}, a.vehicle === 'tent' ? 'tent' : `${a.vehicle}, ${a.vehicle_length_m} m`,
+                                    a.vehicle === 'tent' ? null : mark('vehicle_length_m')),
+        el('dt', {}, 'hook-up'), el('dd', {}, a.hookup ? 'yes' : 'no', mark('hookup'))),
+      assumed.size ? el('p', {class: 'meta'}, 'Values marked “assumed” came from me, not you. Cancel and tap the ' +
+                                              'chip above if one is wrong.') : null,
+      el('p', {}, hold.consequence),
+      el('div', {class: 'row'}, yes, no));
+  }
+  if (hold.result) {
+    const refused = hold.result.status === 'refused';
+    return el('div', {class: 'result' + (refused ? ' refused' : '')}, 'Tool result: ' + JSON.stringify(hold.result));
+  }
+  return null;
+}
+
+function imageCard(image) {
+  if (image.refused) {
+    return el('div', {class: 'image-result refused'}, el('strong', {}, 'Refused: '), image.reason,
+      el('div', {class: 'meta'}, `${image.file} · “${image.question}”`));
+  }
+  return el('div', {class: 'image-result'},
+    el('strong', {}, image.claim), ' ', el('span', {class: 'confidence'}, `confidence ${image.confidence.toFixed(2)}`),
+    el('div', {}, 'Evidence: ' + image.evidence),
+    el('div', {class: 'meta'}, `${image.file} · “${image.question}”`));
+}
+
 // Lab 4 integration point: everything the server returns is shown here.
 function render(data) {
   if (data.version) document.getElementById('version').textContent = data.version;
@@ -198,10 +298,11 @@ function render(data) {
                el('button', {class: 'secondary', type: 'button', onclick: () => send(reply)}, reply)))
            : null))));
   }
-  if (data.recommendation) bubble.append(pitchCard(data.recommendation, bubble));
+  const canHold = (data.actions || []).includes('hold');
+  if (data.recommendation) bubble.append(pitchCard(data.recommendation, bubble, canHold));
   if (data.alternatives && data.alternatives.length) {
     const others = el('div', {class: 'others', hidden: ''},
-                      ...data.alternatives.map(card => pitchCard(card, bubble)));
+                      ...data.alternatives.map(card => pitchCard(card, bubble, canHold)));
     const toggle = el('button', {class: 'link', type: 'button'},
                       `${data.alternatives.length} other option${data.alternatives.length > 1 ? 's' : ''}`);
     toggle.addEventListener('click', () => { others.hidden = !others.hidden; });
@@ -211,6 +312,16 @@ function render(data) {
     bubble.append(el('div', {class: 'note'}, 'Closest:'),
       el('ul', {class: 'near'}, ...data.near_misses.map(n => el('li', {}, `${n.pitch}: ${n.why_not}`))));
   }
+  if (data.answer) bubble.append(el('blockquote', {class: 'answer'}, '“' + data.answer.text + '”'));
+  if (data.stale_warning) bubble.append(el('div', {class: 'warning', role: 'alert'}, '⚠ ' + data.stale_warning));
+  if (data.evidence && data.evidence.length) bubble.append(evidenceCard(data.evidence));
+  if (data.declined) {
+    bubble.append(el('div', {class: 'declined'},
+      `Best match scored ${data.declined.best_score.toFixed(2)}; I only answer from passages scoring ` +
+      `${data.declined.threshold.toFixed(2)} or more, so no passage is shown as evidence.`));
+  }
+  if (data.hold) bubble.append(holdCard(data.hold));
+  if (data.image) bubble.append(imageCard(data.image));
   if (data.note) bubble.append(el('div', {class: 'note'}, data.note));
   if (data.trace) {
     bubble.append(el('details', {class: 'trace'}, el('summary', {}, 'What the system did'),
@@ -218,6 +329,15 @@ function render(data) {
   }
   log.append(bubble);
 }
+
+document.getElementById('check-poster').addEventListener('click', () =>
+  send('', null, 'Lab 4 check: poster image', {type: 'image_check', image: 'poster'}));
+document.getElementById('check-noticeboard').addEventListener('click', () =>
+  send('', null, 'Lab 4 check: noticeboard image', {type: 'image_check', image: 'noticeboard'}));
+document.getElementById('check-invalid').addEventListener('click', () =>
+  send('', null, 'Lab 4 check: hold Pitch 12 for 21 nights', {type: 'propose_hold_raw', call: {
+    name: 'hold_pitch', arguments: {pitch: 12, check_in: '2027-08-14', check_out: '2027-09-04', adults: 2,
+      children: 0, dogs: 1, vehicle: 'campervan', vehicle_length_m: 6.0, hookup: true}}}));
 
 document.getElementById('ask').addEventListener('submit', (event) => {
   event.preventDefault();
