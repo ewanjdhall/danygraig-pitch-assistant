@@ -33,6 +33,7 @@ Replayed through `app.turn()` on v3 by `tests/run_lab4.py`, with temporary hold 
 | Confirm pressed twice | held; holds now: 1 |
 | The same hold asked for again (idempotency) | held; ok; holds now: 1 |
 | A pitch held by another guest is not suggested | held; holds now: 1 |
+| A question in the middle of a booking, then a hold (the booking is kept) | held; holds now: 1 |
 
 ## Image checks (the lab's mock and sample images)
 

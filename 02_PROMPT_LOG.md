@@ -69,3 +69,75 @@ Tool used: Claude.
 Request or command: write up the revision and the Test B rerun, draw the v2 diagram, and add my Week 2 storyboard to the folder.
 What came back: the Review and revision section of `01_SPEC.md`, `diagrams/system_path_v2.*`, and `storyboard/` (copied from my Week 2 work).
 What I decided to keep, change or reject, and why: **Kept:** the limitation that the model step is simulated, stated plainly in the spec, the app and the page, so nobody mistakes the tests for an evaluation of a real LLM.
+
+---
+
+# Lab 4: AI use (Wed 28 Oct 2026, GMT)
+
+Same assistant: Claude (Anthropic, Claude Opus 5.5) in the Claude app, with access to my course folder.
+It read the Lab 4 page, the student handout, the integration steps and the starter files, wrote and ran
+the code and the tests, drove a real browser to check the page, and made the Git commits (each carries a
+`Co-Authored-By: Claude` line). The supplied mock and sample files were used throughout; no API key, no
+live model and no real personal data.
+
+## 06:25  Starting point
+Request: "u might have to do lab 3-4 yourself first" (Lab 3 had been done on 20 Oct, so only Lab 4 was needed).
+What came back: the Lab 3 app was copied with its Git history into a new folder and run first: Test A
+still gave Pitch 7. The Lab 4 support files were added unchanged and the three self-tests passed.
+Kept, changed or rejected:
+- **Kept:** my Lab 3 app files, as the lab asks, rather than the supplied appointment app.
+- **Rejected:** the supplied `mock_model.py` and `recorded_runs/`, which answer for the appointment app.
+
+## 06:29  Phase 1: context
+What came back: `log_context(parts)` before the model call, and `01_CONTEXT_MAP.md` filled in from the
+real terminal output.
+Kept, changed or rejected: **Kept** "nothing redundant to remove" for the booking path, with the
+requirements summary marked as only partly trusted because it travels through the browser.
+
+## 06:31  Phase 2: my own corpus and the answer path
+What came back: seven made-up guest-information documents for the park (with a superseded 2026
+cancellations section for the stale case), question routing in `model.py`, and `answer_turn()` with the
+evidence card, the stale warning and the decline below 0.25.
+Kept, changed or rejected:
+- **Kept:** quoting the passage word for word as the simulated answer, so the answer cannot say more
+  than its source; a model writing the answer is labelled as planned.
+- **Changed:** the supplied course documents moved to `corpus_supplied/` (still runnable with
+  `--corpus`), because a holiday-park assistant should not answer coursework questions.
+- **Changed:** the cancellation policy is now a question the assistant can answer; only cancelling *a
+  booking* stays out of scope.
+- **Rejected:** sending the booking requirements to the answer step (see the context map).
+
+## 06:35  Phase 3: a tool of my own
+What came back: `hold_tool.py` (`hold_pitch`) instead of the revision-slot tool, wired to a "Hold this
+pitch" button, a confirmation with the arguments, `run()` only after the guest presses "Hold Pitch N",
+and `tool_log.jsonl`.
+Kept, changed or rejected:
+- **Kept:** the app, not the model, builds the call from the chips and the pitch the guest chose, so
+  text in a message or a passage can never start it.
+- **Changed after the first browser run:** the confirmation said "a 6 m campervan" when I had never given
+  a length (Test B). It now says "a campervan of about 6 m (I assumed the length)" and marks assumed
+  values, because the guest is approving those arguments.
+- **Added:** every check runs again when the hold runs, and holds by other guests are left out of
+  suggestions; otherwise the assistant could suggest a pitch that it would then refuse to hold.
+
+## 06:36  Phase 4: images
+What came back: two "Lab 4 checks" buttons that run `vlm.py` on the sample images and show the claim
+with its confidence, or the refusal with its reason.
+Kept, changed or rejected: **Kept** them out of the guest conversation, labelled as lab checks, because
+the sample images are a course poster and a noticeboard.
+
+## 06:38  Tests, a failure, and the fix
+What came back: `tests/run_lab4.py` replays 12 question cases, 11 tool cases, both images and every Lab 3
+case on v3. It found "Can we have a campfire?" answered from the hook-up passage (a false alarm on
+"can", "we", "have") and "Is there wifi?" missed ("Wi-Fi").
+Kept, changed or rejected:
+- **Kept:** the failing results in a commit of their own, before fixing them, as evidence.
+- **Changed:** stop words, hyphen joining and plural folding in `retrieve.py`. Rerunning the cases showed
+  this broke the grounded case ("What time can we arrive?" went to the quiet-time passage), so the
+  arrival passage was reworded to start "Arrival time:", and "campfires" was added to the site rules.
+- **Kept as a known weakness:** "What time is check-in?" (a 0.42 tie).
+
+## 06:40  Browser checks and records
+What came back: screenshots in `screenshots/lab4/`, `tool_log.jsonl` from the browser session, and
+`02_TEST_RECORD.md` written from what the screen showed (including "partly" for the stale case, as the
+handout suggests).

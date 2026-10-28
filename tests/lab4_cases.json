@@ -296,6 +296,27 @@
           "message": "Hi, 2 adults, 6m campervan, 14-16 Aug, need electric hook-up"
         }
       ]
+    },
+    {
+      "id": "t_question_then_hold",
+      "title": "A question in the middle of a booking, then a hold (the booking is kept)",
+      "steps": [
+        {
+          "do": "say",
+          "message": "Hi, 2 adults, 6m campervan, 14-16 Aug, need electric hook-up"
+        },
+        {
+          "do": "say",
+          "message": "When is quiet time?"
+        },
+        {
+          "do": "propose",
+          "pitch": 7
+        },
+        {
+          "do": "confirm"
+        }
+      ]
     }
   ],
   "images": [
