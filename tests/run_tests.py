@@ -84,7 +84,7 @@ def run_case(case, version):
     original = app.DATA_DIR
     if case.get("data_dir"):
         app.DATA_DIR = os.path.join(ROOT, case["data_dir"])
-    steps = case.get("turns_v2", case["turns"]) if version == "v2" else case["turns"]
+    steps = case.get("turns_v2", case["turns"]) if version != "v1" else case["turns"]  # v2 and v3 ask first
     state, turns = None, []
     try:
         for step in steps:
