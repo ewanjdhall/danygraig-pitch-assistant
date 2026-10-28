@@ -451,6 +451,12 @@ def apply_edits(req, edits, version):
 # One turn of the conversation
 # --------------------------------------------------------------------------
 
+def log_context(parts):
+    """Lab 4, Phase 1: print exactly what this call sends to the model."""
+    for part in parts:
+        print("CONTEXT:", part, flush=True)
+
+
 def build_parts(message, previous, version):
     parts = [{"role": "system", "content": SYSTEM_INSTRUCTIONS[version]}]
     if previous:
@@ -485,6 +491,7 @@ def turn(message, state=None, edits=None, version=None):
                        actions=["try_again"])
 
     if message.strip():
+        log_context(parts)
         req = model.call_json(parts, SCHEMAS[version])  # SIMULATED language-model step
         trace["model_output"] = copy.deepcopy(req)
     elif previous:
