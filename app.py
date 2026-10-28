@@ -560,9 +560,15 @@ def turn(message, state=None, edits=None, version=None, action=None, session=Non
     req.pop("question", None)
 
     if req.get("out_of_scope") and not edits:
-        return respond(version, "Sorry, I can only help you choose a touring or tent pitch at "
-                       "Danygraig: your dates, who's coming, your vehicle, hook-up and dogs. For "
-                       f"{req['out_of_scope']}, please contact reception.", state, trace,
+        if version == "v3":  # v3 can also answer questions, so its scope statement says so
+            scope = ("Sorry, I can help you choose and hold a touring or tent pitch at Danygraig, and "
+                     "answer questions from the park's guest information, but not with "
+                     f"{req['out_of_scope']}. Please contact reception for that.")
+        else:
+            scope = ("Sorry, I can only help you choose a touring or tent pitch at Danygraig: your dates, "
+                     "who's coming, your vehicle, hook-up and dogs. For "
+                     f"{req['out_of_scope']}, please contact reception.")
+        return respond(version, scope, state, trace,
                        chips=chips_for(previous, version) if previous else [],
                        actions=["rephrase"])
     req.pop("out_of_scope", None)

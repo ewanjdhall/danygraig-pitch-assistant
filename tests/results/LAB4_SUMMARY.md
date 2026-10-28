@@ -15,6 +15,7 @@ Replayed through `app.turn()` on v3 by `tests/run_lab4.py`, with temporary hold 
 | Extra: campfire (different word from the passage) | “Can we have a campfire?” | answered from 5 Quiet time and site rules (2026-10-01, score 0.69) |
 | Extra: wifi (written Wi-Fi in the passage) | “Is there wifi?” | answered from 2 Facilities (2026-10-01, score 0.75) |
 | Extra: check-in (no passage uses that word) | “What time is check-in?” | answered from 1 Arriving and leaving (2026-10-01, score 0.42) |
+| Extra: a request to cancel a booking (out of scope) | “Can I cancel my booking?” | no answer: Sorry, I can help you choose and hold a touring or tent pitc |
 | Supplied corpus: grounded | “When is coursework 1 due?” | answered from 3 Assessment (2026-09-12, score 1.06) |
 | Supplied corpus: stale | “What is the late-submission penalty?” | answered from 5.2 Late submission (2026-09-12, score 0.41), stale warning shown |
 | Supplied corpus: unanswerable | “Can I use an AI assistant for the project?” | declined (best score 0.00) |
@@ -50,5 +51,5 @@ Replayed through `app.turn()` on v3 by `tests/run_lab4.py`, with temporary hold 
 | Test B - problem input: vague dates, no vehicle length, and Bella could be a person or a pet | recommends Pitch 12 | same as v2 |
 | Extra check - the Week 2 failure storyboard message (dates and length given, Bella still ambiguous) | recommends Pitch 12 | same as v2 |
 | Extra check - the dog is named clearly, so v2 should not ask about her | recommends Pitch 12 | same as v2 |
-| Out-of-scope request | no pitch: Sorry, I can only help you choose a touring or tent pitch at Danygraig | same as v2 |
+| Out-of-scope request | no pitch: Sorry, I can help you choose and hold a touring or tent pitch at Danyg | same as v2 |
 | Data source unavailable (pitch and booking files can't be read) | no pitch: I can't check which pitches are free right now, so I won't suggest one | same as v2 |

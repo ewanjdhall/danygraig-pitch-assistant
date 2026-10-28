@@ -47,6 +47,11 @@
       "question": "What time is check-in?"
     },
     {
+      "id": "q_extra_cancel_booking",
+      "title": "Extra: a request to cancel a booking (out of scope)",
+      "question": "Can I cancel my booking?"
+    },
+    {
       "id": "q_supplied_grounded",
       "title": "Supplied corpus: grounded",
       "question": "When is coursework 1 due?",

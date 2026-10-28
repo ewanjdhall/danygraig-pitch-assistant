@@ -175,8 +175,10 @@ def regression():
             v2 = run_tests.run_case(case, "v2")
             reset_tool_files()
             v3 = run_tests.run_case(case, "v3")
-        same = [run_tests.outcome(v2[:i]) for i in range(1, len(v2) + 1)] == \
-               [run_tests.outcome(v3[:i]) for i in range(1, len(v3) + 1)]
+        def kind(outcome):  # v3 words its scope differently on purpose, so compare what happened
+            return "no pitch" if outcome.startswith("no pitch") else outcome
+        same = [kind(run_tests.outcome(v2[:i])) for i in range(1, len(v2) + 1)] == \
+               [kind(run_tests.outcome(v3[:i])) for i in range(1, len(v3) + 1)]
         rows.append((case["title"], run_tests.outcome(v3), "same as v2" if same else "DIFFERENT from v2"))
     return rows
 
