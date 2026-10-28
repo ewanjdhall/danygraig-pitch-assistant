@@ -5,7 +5,7 @@ trip in their own words; the assistant shows what it understood as chips they ca
 guessing, answers questions about the park from its guest information with the source shown, and can
 hold a pitch once the guest has confirmed exactly what will be held.
 
-README prose: 748 words (code and commands not counted).
+README prose: 839 words (code and commands not counted).
 
 All data is made up: this is not the real Danygraig Holiday Park's pitch list, prices, bookings or rules.
 
@@ -68,13 +68,17 @@ checks. `4f0afa8` recorded two retrieval failures from the replayed cases (a cam
 from the hook-up passage; "wifi" missed); `0e68bf7` fixed them and recorded the regression the fix
 caused on the way. Browser results: `02_TEST_RECORD.md`, `tool_log.jsonl`, `screenshots/lab4/`.
 
+**A2 report (28 Oct).** Capturing the storyboards showed that v3's out-of-scope reply still said "I can
+only help you choose a pitch", which stopped being true once v3 could answer questions and hold pitches;
+`75ea381` makes it say what v3 can do (Amershi et al.'s G1) and adds the case to the tests.
+
 ## AI assistance
 
 - **Tool:** Claude (Anthropic, Claude Opus 5.5) in the Claude app, working as an agent in the project
   folder. It wrote most of the code, tests and records, checked the page in a real browser and made the
   commits; every commit it made carries `Co-Authored-By: Claude`.
-- **What I asked it for:** to build Lab 3 from my Week 2 storyboards and Lab 4 on top of it, without
-  submitting anything.
+- **What I asked it for:** to build Lab 3 from my Week 2 storyboards and Lab 4 on top of it, then to
+  draft the A2 report with its diagram and storyboards, without submitting anything.
 - **Output that was checked and changed** (details with times in `02_PROMPT_LOG.md`): a live LLM was
   rejected so tests replay exactly and no key is needed; v1's guessing was kept on purpose as evidence;
   the hold confirmation was changed to mark assumed values after a browser check showed "a 6 m campervan"
@@ -86,7 +90,9 @@ caused on the way. Browser results: `02_TEST_RECORD.md`, `tool_log.jsonl`, `scre
 - `01_SPEC.md`: the Lab 3 specification, tests A and B, review and revision.
 - `01_CONTEXT_MAP.md`, `02_TEST_RECORD.md`, `tool_log.jsonl`: Lab 4 records. `data/holds.json` is created when a pitch is held and is not kept in Git.
 - `02_PROMPT_LOG.md`: AI use for Labs 3 and 4.
-- `tests/results/`: every replayed conversation; `screenshots/`: the pages; `diagrams/`: system paths;
-  `storyboard/`: my Week 2 storyboards.
+- `tests/results/`: every replayed conversation; `screenshots/`: the pages; `diagrams/`: system paths
+  (v1, v2) and the A2 system diagram (v3); `storyboard/`: my Week 2 storyboards.
+- `storyboard/a2/`: the A2 storyboards, real screenshots captured from the running app by
+  `tools/figures/` (these scripts need Playwright; the app itself does not).
 - `corpus_supplied/`: the lab's six sample documents, unchanged
   (`python retrieve.py --corpus corpus_supplied "when is coursework 1 due"`).
