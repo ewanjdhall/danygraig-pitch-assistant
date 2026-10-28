@@ -1,54 +1,313 @@
 {
   "_note": "Lab 4 checks replayed by tests/run_lab4.py on v3. Questions go through the answer path (retrieve.py, corpus/); tool cases go through the hold_pitch tool with temporary files; images use the lab's mock (vlm.py).",
   "questions": [
-    {"id": "q_grounded", "title": "Grounded: the guest information answers it", "question": "What time can we arrive?"},
-    {"id": "q_stale", "title": "Stale: an old edition ranks first", "question": "What is your cancellation policy?"},
-    {"id": "q_unanswerable", "title": "Unanswerable: not in the guest information", "question": "Is there a swimming pool?"},
-    {"id": "q_extra_dog", "title": "Extra: dogs", "question": "Can I bring my dog?"},
-    {"id": "q_extra_hookup", "title": "Extra: hook-up", "question": "Do all pitches have hook-up?"},
-    {"id": "q_extra_deposit", "title": "Extra: deposit", "question": "How much is the deposit?"},
-    {"id": "q_extra_campfire", "title": "Extra: campfire (different word from the passage)", "question": "Can we have a campfire?"},
-    {"id": "q_extra_wifi", "title": "Extra: wifi (written Wi-Fi in the passage)", "question": "Is there wifi?"},
-    {"id": "q_supplied_grounded", "title": "Supplied corpus: grounded", "question": "When is coursework 1 due?", "corpus": "corpus_supplied"},
-    {"id": "q_supplied_stale", "title": "Supplied corpus: stale", "question": "What is the late-submission penalty?", "corpus": "corpus_supplied"},
-    {"id": "q_supplied_unanswerable", "title": "Supplied corpus: unanswerable", "question": "Can I use an AI assistant for the project?", "corpus": "corpus_supplied"}
+    {
+      "id": "q_grounded",
+      "title": "Grounded: the guest information answers it",
+      "question": "What time can we arrive?"
+    },
+    {
+      "id": "q_stale",
+      "title": "Stale: an old edition ranks first",
+      "question": "What is your cancellation policy?"
+    },
+    {
+      "id": "q_unanswerable",
+      "title": "Unanswerable: not in the guest information",
+      "question": "Is there a swimming pool?"
+    },
+    {
+      "id": "q_extra_dog",
+      "title": "Extra: dogs",
+      "question": "Can I bring my dog?"
+    },
+    {
+      "id": "q_extra_hookup",
+      "title": "Extra: hook-up",
+      "question": "Do all pitches have hook-up?"
+    },
+    {
+      "id": "q_extra_deposit",
+      "title": "Extra: deposit",
+      "question": "How much is the deposit?"
+    },
+    {
+      "id": "q_extra_campfire",
+      "title": "Extra: campfire (different word from the passage)",
+      "question": "Can we have a campfire?"
+    },
+    {
+      "id": "q_extra_wifi",
+      "title": "Extra: wifi (written Wi-Fi in the passage)",
+      "question": "Is there wifi?"
+    },
+    {
+      "id": "q_extra_checkin",
+      "title": "Extra: check-in (no passage uses that word)",
+      "question": "What time is check-in?"
+    },
+    {
+      "id": "q_supplied_grounded",
+      "title": "Supplied corpus: grounded",
+      "question": "When is coursework 1 due?",
+      "corpus": "corpus_supplied"
+    },
+    {
+      "id": "q_supplied_stale",
+      "title": "Supplied corpus: stale",
+      "question": "What is the late-submission penalty?",
+      "corpus": "corpus_supplied"
+    },
+    {
+      "id": "q_supplied_unanswerable",
+      "title": "Supplied corpus: unanswerable",
+      "question": "Can I use an AI assistant for the project?",
+      "corpus": "corpus_supplied"
+    }
   ],
   "tools": [
-    {"id": "t_hold", "title": "Hold after Test A, then confirm", "steps": [
-      {"do": "say", "message": "Hi, 2 adults, 6m campervan, 14-16 Aug, need electric hook-up"},
-      {"do": "propose", "pitch": 7}, {"do": "confirm"}]},
-    {"id": "t_cancel", "title": "Hold proposed, then cancelled", "steps": [
-      {"do": "say", "message": "Hi, 2 adults, 6m campervan, 14-16 Aug, need electric hook-up"},
-      {"do": "propose", "pitch": 7}, {"do": "cancel"}]},
-    {"id": "t_invalid_nights", "title": "Invalid request: 21 nights (shape check)", "steps": [
-      {"do": "propose_raw", "call": {"name": "hold_pitch", "arguments": {"pitch": 12, "check_in": "2027-08-14", "check_out": "2027-09-04", "adults": 2, "children": 0, "dogs": 1, "vehicle": "campervan", "vehicle_length_m": 6.0, "hookup": true}}}]},
-    {"id": "t_invalid_missing", "title": "Invalid request: an argument missing (shape check)", "steps": [
-      {"do": "propose_raw", "call": {"name": "hold_pitch", "arguments": {"pitch": 12, "check_in": "2027-08-14", "check_out": "2027-08-16", "adults": 2, "children": 0, "dogs": 1, "vehicle": "campervan", "vehicle_length_m": 6.0}}}]},
-    {"id": "t_unsuitable", "title": "Request for a pitch that doesn't suit the party (precondition)", "steps": [
-      {"do": "propose_raw", "call": {"name": "hold_pitch", "arguments": {"pitch": 7, "check_in": "2027-08-14", "check_out": "2027-08-16", "adults": 2, "children": 0, "dogs": 1, "vehicle": "campervan", "vehicle_length_m": 6.0, "hookup": true}}}]},
-    {"id": "t_taken_meanwhile", "title": "Pitch taken by another guest between proposal and confirmation (precondition re-checked)", "steps": [
-      {"do": "say", "session": "guest-1", "message": "hi, two of us plus Bella in the campervan, need power, mid August"},
-      {"do": "say", "session": "guest-1", "message": "14-16 Aug, Bella's our dog"},
-      {"do": "propose", "session": "guest-1", "pitch": 12},
-      {"do": "say", "session": "guest-2", "message": "me and my partner and our dog Bella, 7m motorhome, 15-17 Aug, need hook-up"},
-      {"do": "propose", "session": "guest-2", "pitch": 12}, {"do": "confirm", "session": "guest-2"},
-      {"do": "confirm", "session": "guest-1"}]},
-    {"id": "t_one_hold", "title": "A second hold in the same session (permission)", "steps": [
-      {"do": "say", "message": "Hi, 2 adults, 6m campervan, 14-16 Aug, need electric hook-up"},
-      {"do": "propose", "pitch": 7}, {"do": "confirm"}, {"do": "propose", "pitch": 3}]},
-    {"id": "t_double_confirm", "title": "Confirm pressed twice", "steps": [
-      {"do": "say", "message": "Hi, 2 adults, 6m campervan, 14-16 Aug, need electric hook-up"},
-      {"do": "propose", "pitch": 7}, {"do": "confirm"}, {"do": "confirm"}]},
-    {"id": "t_same_again", "title": "The same hold asked for again (idempotency)", "steps": [
-      {"do": "say", "message": "Hi, 2 adults, 6m campervan, 14-16 Aug, need electric hook-up"},
-      {"do": "propose", "pitch": 7}, {"do": "confirm"}, {"do": "propose", "pitch": 7}, {"do": "confirm"}]},
-    {"id": "t_held_not_suggested", "title": "A pitch held by another guest is not suggested", "steps": [
-      {"do": "say", "session": "guest-2", "message": "Hi, 2 adults, 6m campervan, 14-16 Aug, need electric hook-up"},
-      {"do": "propose", "session": "guest-2", "pitch": 7}, {"do": "confirm", "session": "guest-2"},
-      {"do": "say", "session": "guest-1", "message": "Hi, 2 adults, 6m campervan, 14-16 Aug, need electric hook-up"}]}
+    {
+      "id": "t_hold",
+      "title": "Hold after Test A, then confirm",
+      "steps": [
+        {
+          "do": "say",
+          "message": "Hi, 2 adults, 6m campervan, 14-16 Aug, need electric hook-up"
+        },
+        {
+          "do": "propose",
+          "pitch": 7
+        },
+        {
+          "do": "confirm"
+        }
+      ]
+    },
+    {
+      "id": "t_cancel",
+      "title": "Hold proposed, then cancelled",
+      "steps": [
+        {
+          "do": "say",
+          "message": "Hi, 2 adults, 6m campervan, 14-16 Aug, need electric hook-up"
+        },
+        {
+          "do": "propose",
+          "pitch": 7
+        },
+        {
+          "do": "cancel"
+        }
+      ]
+    },
+    {
+      "id": "t_invalid_nights",
+      "title": "Invalid request: 21 nights (shape check)",
+      "steps": [
+        {
+          "do": "propose_raw",
+          "call": {
+            "name": "hold_pitch",
+            "arguments": {
+              "pitch": 12,
+              "check_in": "2027-08-14",
+              "check_out": "2027-09-04",
+              "adults": 2,
+              "children": 0,
+              "dogs": 1,
+              "vehicle": "campervan",
+              "vehicle_length_m": 6.0,
+              "hookup": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "t_invalid_missing",
+      "title": "Invalid request: an argument missing (shape check)",
+      "steps": [
+        {
+          "do": "propose_raw",
+          "call": {
+            "name": "hold_pitch",
+            "arguments": {
+              "pitch": 12,
+              "check_in": "2027-08-14",
+              "check_out": "2027-08-16",
+              "adults": 2,
+              "children": 0,
+              "dogs": 1,
+              "vehicle": "campervan",
+              "vehicle_length_m": 6.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "t_unsuitable",
+      "title": "Request for a pitch that doesn't suit the party (precondition)",
+      "steps": [
+        {
+          "do": "propose_raw",
+          "call": {
+            "name": "hold_pitch",
+            "arguments": {
+              "pitch": 7,
+              "check_in": "2027-08-14",
+              "check_out": "2027-08-16",
+              "adults": 2,
+              "children": 0,
+              "dogs": 1,
+              "vehicle": "campervan",
+              "vehicle_length_m": 6.0,
+              "hookup": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "t_taken_meanwhile",
+      "title": "Pitch taken by another guest between proposal and confirmation (precondition re-checked)",
+      "steps": [
+        {
+          "do": "say",
+          "session": "guest-1",
+          "message": "hi, two of us plus Bella in the campervan, need power, mid August"
+        },
+        {
+          "do": "say",
+          "session": "guest-1",
+          "message": "14-16 Aug, Bella's our dog"
+        },
+        {
+          "do": "propose",
+          "session": "guest-1",
+          "pitch": 12
+        },
+        {
+          "do": "say",
+          "session": "guest-2",
+          "message": "me and my partner and our dog Bella, 7m motorhome, 15-17 Aug, need hook-up"
+        },
+        {
+          "do": "propose",
+          "session": "guest-2",
+          "pitch": 12
+        },
+        {
+          "do": "confirm",
+          "session": "guest-2"
+        },
+        {
+          "do": "confirm",
+          "session": "guest-1"
+        }
+      ]
+    },
+    {
+      "id": "t_one_hold",
+      "title": "A second hold in the same session (permission)",
+      "steps": [
+        {
+          "do": "say",
+          "message": "Hi, 2 adults, 6m campervan, 14-16 Aug, need electric hook-up"
+        },
+        {
+          "do": "propose",
+          "pitch": 7
+        },
+        {
+          "do": "confirm"
+        },
+        {
+          "do": "propose",
+          "pitch": 3
+        }
+      ]
+    },
+    {
+      "id": "t_double_confirm",
+      "title": "Confirm pressed twice",
+      "steps": [
+        {
+          "do": "say",
+          "message": "Hi, 2 adults, 6m campervan, 14-16 Aug, need electric hook-up"
+        },
+        {
+          "do": "propose",
+          "pitch": 7
+        },
+        {
+          "do": "confirm"
+        },
+        {
+          "do": "confirm"
+        }
+      ]
+    },
+    {
+      "id": "t_same_again",
+      "title": "The same hold asked for again (idempotency)",
+      "steps": [
+        {
+          "do": "say",
+          "message": "Hi, 2 adults, 6m campervan, 14-16 Aug, need electric hook-up"
+        },
+        {
+          "do": "propose",
+          "pitch": 7
+        },
+        {
+          "do": "confirm"
+        },
+        {
+          "do": "propose",
+          "pitch": 7
+        },
+        {
+          "do": "confirm"
+        }
+      ]
+    },
+    {
+      "id": "t_held_not_suggested",
+      "title": "A pitch held by another guest is not suggested",
+      "steps": [
+        {
+          "do": "say",
+          "session": "guest-2",
+          "message": "Hi, 2 adults, 6m campervan, 14-16 Aug, need electric hook-up"
+        },
+        {
+          "do": "propose",
+          "session": "guest-2",
+          "pitch": 7
+        },
+        {
+          "do": "confirm",
+          "session": "guest-2"
+        },
+        {
+          "do": "say",
+          "session": "guest-1",
+          "message": "Hi, 2 adults, 6m campervan, 14-16 Aug, need electric hook-up"
+        }
+      ]
+    }
   ],
   "images": [
-    {"id": "i_poster", "title": "Poster image: the answer is visible", "image": "poster"},
-    {"id": "i_noticeboard", "title": "Noticeboard image: refuse", "image": "noticeboard"}
+    {
+      "id": "i_poster",
+      "title": "Poster image: the answer is visible",
+      "image": "poster"
+    },
+    {
+      "id": "i_noticeboard",
+      "title": "Noticeboard image: refuse",
+      "image": "noticeboard"
+    }
   ]
 }

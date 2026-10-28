@@ -16,6 +16,10 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 CORPUS = os.path.join(HERE, "corpus")  # the park's guest information (made-up); the supplied
                                        # course documents are kept in corpus_supplied/
 STOP = set("a an and are as at be by for from how in is it of on or that the to was what when where which who will with your".split())
+# Added for the park assistant: words guests use in almost every question ("can we have…", "do I…").
+# Without them, "Can we have a campfire?" matched the hook-up passage on "can", "we" and "have".
+STOP |= set("can could do does did i we you me us my our have has had there any all get much many am "
+            "would should may might please".split())
 
 
 def _front_matter(text):
@@ -47,8 +51,16 @@ def load(corpus_dir=None):
     return out
 
 
+def _fold(w):
+    """Fold a simple plural ("dogs" -> "dog", "campfires" -> "campfire"), on questions and passages alike."""
+    return w[:-1] if len(w) > 3 and w.endswith("s") and not w.endswith("ss") else w
+
+
 def _words(s):
-    return [w for w in re.findall(r"[a-z0-9]+", s.lower()) if w not in STOP]
+    s = s.lower()
+    # "Wi-Fi" and "hook-up" also count as "wifi" and "hookup", so either spelling matches.
+    joined = [a + b for a, b in re.findall(r"([a-z0-9]+)-([a-z0-9]+)", s)]
+    return [_fold(w) for w in re.findall(r"[a-z0-9]+", s) + joined if w not in STOP]
 
 
 def retrieve(question, k=3, passages=None, corpus_dir=None):

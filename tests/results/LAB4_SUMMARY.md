@@ -6,16 +6,17 @@ Replayed through `app.turn()` on v3 by `tests/run_lab4.py`, with temporary hold 
 
 | Case | Question | Outcome |
 |---|---|---|
-| Grounded: the guest information answers it | “What time can we arrive?” | answered from 1 Arriving and leaving (2026-10-01, score 0.57) |
-| Stale: an old edition ranks first | “What is your cancellation policy?” | answered from 6 Deposits and cancellations (2026-10-01, score 0.81), stale warning shown |
+| Grounded: the guest information answers it | “What time can we arrive?” | answered from 1 Arriving and leaving (2026-10-01, score 0.89) |
+| Stale: an old edition ranks first | “What is your cancellation policy?” | answered from 6 Deposits and cancellations (2026-10-01, score 0.87), stale warning shown |
 | Unanswerable: not in the guest information | “Is there a swimming pool?” | declined (best score 0.00) |
-| Extra: dogs | “Can I bring my dog?” | answered from 4 Dogs (2026-10-01, score 0.76) |
-| Extra: hook-up | “Do all pitches have hook-up?” | answered from 3 Electric hook-up (2026-10-01, score 1.36) |
-| Extra: deposit | “How much is the deposit?” | answered from 6 Deposits and cancellations (2026-10-01, score 0.55), stale warning shown |
-| Extra: campfire (different word from the passage) | “Can we have a campfire?” | answered from 3 Electric hook-up (2026-10-01, score 0.46) |
-| Extra: wifi (written Wi-Fi in the passage) | “Is there wifi?” | declined (best score 0.00) |
+| Extra: dogs | “Can I bring my dog?” | answered from 4 Dogs (2026-10-01, score 1.13) |
+| Extra: hook-up | “Do all pitches have hook-up?” | answered from 3 Electric hook-up (2026-10-01, score 1.67) |
+| Extra: deposit | “How much is the deposit?” | answered from 6 Deposits and cancellations (2026-10-01, score 0.82), stale warning shown |
+| Extra: campfire (different word from the passage) | “Can we have a campfire?” | answered from 5 Quiet time and site rules (2026-10-01, score 0.69) |
+| Extra: wifi (written Wi-Fi in the passage) | “Is there wifi?” | answered from 2 Facilities (2026-10-01, score 0.75) |
+| Extra: check-in (no passage uses that word) | “What time is check-in?” | answered from 1 Arriving and leaving (2026-10-01, score 0.42) |
 | Supplied corpus: grounded | “When is coursework 1 due?” | answered from 3 Assessment (2026-09-12, score 1.06) |
-| Supplied corpus: stale | “What is the late-submission penalty?” | answered from 5.2 Late submission (2026-09-12, score 0.49), stale warning shown |
+| Supplied corpus: stale | “What is the late-submission penalty?” | answered from 5.2 Late submission (2026-09-12, score 0.41), stale warning shown |
 | Supplied corpus: unanswerable | “Can I use an AI assistant for the project?” | declined (best score 0.00) |
 
 ## The hold_pitch tool
