@@ -19,6 +19,18 @@ sys.path.insert(0, ROOT)
 
 import app  # noqa: E402
 import hold_tool  # noqa: E402
+from datetime import datetime as _datetime  # noqa: E402
+
+
+class _FixedClock(_datetime):
+    """Every replay runs at the same time, so the result files only change when behaviour does."""
+    @classmethod
+    def now(cls, tz=None):
+        return cls(2026, 10, 28, 9, 0)
+
+
+hold_tool.datetime = _FixedClock
+app.datetime = _FixedClock
 
 RESULTS = os.path.join(ROOT, "tests", "results")
 TEST_A = "Hi, 2 adults, 6m campervan, 14-16 Aug, need electric hook-up"
