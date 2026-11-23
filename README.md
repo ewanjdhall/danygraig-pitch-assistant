@@ -5,7 +5,7 @@ trip in their own words; the assistant shows what it understood as chips they ca
 ambiguity its rules detect, answers questions about the park from its guest information with the source shown, and can
 hold a pitch once the guest has confirmed exactly what will be held.
 
-README prose word count: 1423 (whitespace count; fenced code and commands, URLs, Markdown markup and this count line excluded).
+README prose word count: 1412 (whitespace count; fenced code and commands, URLs, Markdown markup and this count line excluded).
 
 All data is made up: this is not the real Danygraig Holiday Park's pitch list, prices, bookings or rules.
 
@@ -91,13 +91,13 @@ only help you choose a pitch", which stopped being true once v3 could answer que
   commits; every commit it made carries `Co-Authored-By: Claude`.
 - **What I asked it for:** to build Lab 3 from my Week 2 storyboards and Lab 4 on top of it, then to
   draft the A2 report with its diagram and storyboards, without submitting anything.
-- **Report provenance:** The request above concerned earlier AI-assisted drafts, not the independently written report I intend to submit. I wrote "COPPYY (shortened)" independently from my own notes. AI assistance with the prototype, tests, development records, figures and subsequent review is acknowledged separately.
+- I wrote "A2 Final Draft" from my own notes before the AI-assisted review and limited editing described below. AI assistance with the prototype, tests, development records, figures and subsequent review is acknowledged separately.
 - **Output that was checked and changed** (details with times in `02_PROMPT_LOG.md`): a live LLM was
   rejected so tests replay exactly and no key is needed; v1's guessing was kept on purpose as evidence;
   the hold confirmation was changed to mark assumed values after a browser check showed "a 6 m campervan"
   that the guest never stated; failing retrieval results were committed before being fixed.
 - **My own checks:** On 19 Nov I re-ran the Lab 4 tests on my laptop and the saved results didn't change. Then I tried the four example messages above in the app. It marked the children and dogs I hadn't mentioned as assumed before holding Pitch 7, and asked about Bella and the dates instead of guessing. It also used the 2027 cancellation policy even though the old 2026 page scored higher. One problem: when I said Bella was a guest, it counted her as a third adult without marking that as assumed, though she could be a child. I've left that for Phase 3.
-- **Later assistance:** ChatGPT / Codex (OpenAI) reviewed the files and report and prepared this separate repository copy. Its test runs are labelled as assisted checks in `REVIEW_CHECKS.md`. It did not submit coursework, and its actions must not be claimed as the student's personal checks. No application behaviour was changed during repository preparation.
+- **Later AI assistance:** ChatGPT/Codex (OpenAI) reviewed the report and project files, suggested limited technical wording and storyboard-caption corrections, and helped update the word count and commit link. It also replayed tests and prepared the GitHub upload copy. Those assisted test runs are recorded separately from my personal checks in `REVIEW_CHECKS.md`.
 
 ## Additional files
 
