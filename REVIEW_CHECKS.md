@@ -1,6 +1,6 @@
 # AI-assisted repository preparation checks
 
-Date: 2 November 2026. Performed by Codex / ChatGPT (OpenAI), not by the student. These checks prepare a separate upload copy; they do not constitute a coursework submission or a participant evaluation.
+Date: 2 November 2026. Performed by Codex / ChatGPT (OpenAI), not by the student. Scope: repository preparation and replay testing; no participant evaluation.
 
 ## Starting point and unchanged application
 
@@ -23,7 +23,7 @@ All commands were run with `IIS_MODEL=mock`; no API key or live model was used.
 
 ## Known failures independently reproduced
 
-These remain unfixed and are documented in Draft 2 and the README.
+These remain unfixed and are documented in the [README](README.md#known-limitations).
 
 | Input | Actual v3 behaviour |
 |---|---|
@@ -37,11 +37,8 @@ These remain unfixed and are documented in Draft 2 and the README.
 - Checked current text files for local home-directory paths, the student number and university email addresses; no matches in tracked file contents.
 - Fictional bookings contain pitch numbers and dates, not real guest identities. Real booking/payment/email integrations are not present.
 - Replaced university email metadata with the selected account's GitHub no-reply address in this upload copy only. Compared all 24 historical commits: file trees, timestamps and messages match their originals. `HISTORY_MAP.md` maps the changed IDs.
-- Only the prepared `main` branch is intended for upload; backup/original refs are not to be pushed.
 - Supplied teaching fixtures are distinguished from the actual assignment requirements. No module PDFs, whole course folder, report drafts, credentials or saved guest holds are included.
 
-## What is still required
+## Personal checks
 
-- Student: run/inspect the prototype and record genuine personal checks in the README. Do not replace this with a claim that these assisted checks were performed personally.
-- Student: approve public visibility before a marker can access the repository, or obtain an agreed alternative from the module team.
-- Student: review and approve the final report and submission separately. No Canvas upload or submission has been made.
+Status updated 23 November 2026: the [README's AI assistance section](README.md#ai-assistance) records Ewan's separate personal checks dated 19 November 2026. Those checks are distinct from the AI-assisted replays recorded above.
